@@ -12,7 +12,7 @@ import java.util.Properties;
  */
 public class ConfigFile {
     //Đường dẫn tới file config
-    public static final String DEFAULT_NAME = System.getProperty("os.name").contains("Windows") ?  (System.getProperty("user.dir").substring(0, System.getProperty("user.dir").indexOf("QuanLyBienBan\\") + "QuanLyBienBan\\".length()) + "config.properties") : (System.getProperty("user.dir").substring(0, System.getProperty("user.dir").indexOf("QuanLyBienBan/") + "QuanLyBienBan/".length()) + "config.properties");
+    public static final String DEFAULT_NAME = (System.getProperty("os.name").contains("Windows") ?  (System.getProperty("user.dir").substring(0, System.getProperty("user.dir").indexOf("QuanLyBienBan\\") + "QuanLyBienBan\\".length())) : (System.getProperty("user.dir").substring(0, System.getProperty("user.dir").indexOf("QuanLyBienBan/") + "QuanLyBienBan/".length())))  + "config.properties";
     public static Properties p;
     
     private ConfigFile() {

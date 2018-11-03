@@ -300,23 +300,28 @@ public class GUIStaffClient extends javax.swing.JFrame {
         int result = jfc.showOpenDialog(this);
         if (result == JFileChooser.APPROVE_OPTION) {
             selectedFile = jfc.getSelectedFile();
-            this.fileNameTextField.setText(selectedFile.getAbsolutePath());
-            System.out.println("Selected file: "+selectedFile.getAbsolutePath());
-            BufferedInputStream bufferedStream;
-            try {
-                bufferedStream = new BufferedInputStream(new FileInputStream(selectedFile));
-                int nextByte;
-                StringBuffer localBuffer = new StringBuffer();
-                while( -1 != (nextByte = bufferedStream.read())) {
-                    char nextChar = (char) nextByte;
-                    localBuffer.append(nextChar);
+            if (!selectedFile.getName().endsWith(".txt")) {
+                JOptionPane.showMessageDialog(null, "Invalid File Type");
+            } else {
+                this.fileNameTextField.setText(selectedFile.getAbsolutePath());
+                System.out.println("Selected file: " + selectedFile.getAbsolutePath());
+                BufferedInputStream bufferedStream;
+                try {
+                    bufferedStream = new BufferedInputStream(new FileInputStream(selectedFile));
+                    int nextByte;
+                    StringBuffer localBuffer = new StringBuffer();
+                    while (-1 != (nextByte = bufferedStream.read())) {
+                        char nextChar = (char) nextByte;
+                        localBuffer.append(nextChar);
+                    }
+                    this.jTextArea1.append(localBuffer.toString());
+                } catch (FileNotFoundException ex) {
+                    System.err.println(ex);
+                } catch (IOException ex) {
+                    System.err.println(ex);
                 }
-                this.jTextArea1.append(localBuffer.toString());
-            }catch (FileNotFoundException ex) {
-                Logger.getLogger(GUIStaffClient.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (IOException ex) {
-                Logger.getLogger(GUIStaffClient.class.getName()).log(Level.SEVERE, null, ex);
             }
+
         }
     }//GEN-LAST:event_chooseButtonActionPerformed
 
