@@ -301,47 +301,27 @@ public class GUIStaffClient extends javax.swing.JFrame {
         int result = jfc.showOpenDialog(this);
         if (result == JFileChooser.APPROVE_OPTION) {
             selectedFile = jfc.getSelectedFile();
-<<<<<<< HEAD
-            if("txt".equals(selectedFile.getName().substring(selectedFile.getName().length()-3))){
-                this.jTextArea1.setText("");
-                this.fileNameTextField.setText(selectedFile.getAbsolutePath());
-                System.out.println("Selected file: "+selectedFile.getAbsolutePath());
-=======
             if (!selectedFile.getName().endsWith(".txt")) {
                 JOptionPane.showMessageDialog(null, "Invalid File Type");
             } else {
                 this.fileNameTextField.setText(selectedFile.getAbsolutePath());
                 System.out.println("Selected file: " + selectedFile.getAbsolutePath());
->>>>>>> master
                 BufferedInputStream bufferedStream;
                 try {
                     bufferedStream = new BufferedInputStream(new FileInputStream(selectedFile));
                     int nextByte;
                     StringBuffer localBuffer = new StringBuffer();
-<<<<<<< HEAD
-                    while( -1 != (nextByte = bufferedStream.read())) {
-=======
+
                     while (-1 != (nextByte = bufferedStream.read())) {
->>>>>>> master
                         char nextChar = (char) nextByte;
                         localBuffer.append(nextChar);
                     }
                     this.jTextArea1.append(localBuffer.toString());
-<<<<<<< HEAD
-                }catch (FileNotFoundException ex) {
-                    Logger.getLogger(GUIStaffClient.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (IOException ex) {
-                    Logger.getLogger(GUIStaffClient.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }else{
-                JOptionPane.showMessageDialog(rootPane, "You must input a .txt file!");
-=======
-                } catch (FileNotFoundException ex) {
+                    } catch (FileNotFoundException ex) {
                     System.err.println(ex);
                 } catch (IOException ex) {
                     System.err.println(ex);
                 }
->>>>>>> master
             }
 
         }
