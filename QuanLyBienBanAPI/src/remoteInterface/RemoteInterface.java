@@ -6,6 +6,7 @@
 package remoteInterface;
 
 import entity.Meeting;
+import entity.Report;
 import entity.ReportPart;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -40,6 +41,7 @@ public interface RemoteInterface extends Remote{
     // end interface for Meeting
     
     //interface for report
+    public int generateReport(Report report) throws RemoteException;
     //end interface for report
     
     //interface for filetext
