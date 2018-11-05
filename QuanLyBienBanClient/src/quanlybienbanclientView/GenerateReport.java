@@ -213,7 +213,7 @@ public class GenerateReport extends javax.swing.JFrame {
                 JOptionPane.showMessageDialog(rootPane, "Input file have wrong type. Can't not generate report!\n Choose a right input format or Add new report part file!");
                 return;
             }
-            String[] linesInPCPart = personContentPart.split(System.getProperty("line.separator"));
+            String[] linesInPCPart = personContentPart.split("\n");
             List<PersonContent> personContents = new ArrayList<>();
             for (String line: linesInPCPart){
                 if (line.length() != 0){
@@ -235,7 +235,7 @@ public class GenerateReport extends javax.swing.JFrame {
                 JOptionPane.showMessageDialog(rootPane, "Input file have wrong type. Can't not generate report!\n Choose a right input format or Add new report part file!");
                 return;
             }
-            String[] linesInCTPart = contentTimePart.split(System.getProperty("line.separator"));
+            String[] linesInCTPart = contentTimePart.split("\n");
             List<ContentTime> contentTimes = new ArrayList<>();
             for (String line: linesInCTPart){
                 if (line.length() != 0){
