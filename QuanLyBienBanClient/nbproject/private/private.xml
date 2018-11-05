@@ -3,8 +3,12 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/D:/MyProjects/JavaProjects/NetBeansProjects/QuanLyBienBan/QuanLyBienBanClient/src/quanlybienbanclientView/GUIStaffClient.java</file>
-            <file>file:/D:/MyProjects/JavaProjects/NetBeansProjects/QuanLyBienBan/QuanLyBienBanClient/src/quanlybienbanclientView/LoginForm.java</file>
+            <file>file:/home/wnncr/Desktop/QuanLyBienBan/QuanLyBienBanClient/src/quanlybienbanclientController/MeetingController.java</file>
+            <file>file:/home/wnncr/Desktop/QuanLyBienBan/QuanLyBienBanClient/src/quanlybienbanclientModel/ReportModel.java</file>
+            <file>file:/home/wnncr/Desktop/QuanLyBienBan/QuanLyBienBanClient/src/quanlybienbanclientView/GenerateReport.java</file>
+            <file>file:/home/wnncr/Desktop/QuanLyBienBan/QuanLyBienBanClient/src/quanlybienbanclientModel/MeetingModel.java</file>
+            <file>file:/home/wnncr/Desktop/QuanLyBienBan/QuanLyBienBanClient/src/quanlybienbanclientView/GUIStaffClient.java</file>
+            <file>file:/home/wnncr/Desktop/QuanLyBienBan/QuanLyBienBanClient/src/quanlybienbanclientController/ReportController.java</file>
         </group>
     </open-files>
 </project-private>

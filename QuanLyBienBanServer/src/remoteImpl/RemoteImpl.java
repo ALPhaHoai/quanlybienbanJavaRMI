@@ -6,6 +6,8 @@
 package remoteImpl;
 
 import entity.Meeting;
+import entity.PersonContentTime;
+import entity.Report;
 import entity.ReportPart;
 import java.rmi.RemoteException;
 import java.sql.Connection;
@@ -18,7 +20,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import entity.User;
 import java.io.BufferedInputStream;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -427,6 +428,7 @@ public class RemoteImpl implements RemoteInterface {
     }
     // end Remote Implement for file
 
+    @Override
     public String getReportPartContent(int reportPartId) throws RemoteException{
         Connection conn = ConnectDB.connectDB();
         PreparedStatement stmt = null;
@@ -445,5 +447,25 @@ public class RemoteImpl implements RemoteInterface {
             Logger.getLogger(RemoteImpl.class.getName()).log(Level.SEVERE, null, ex);
         }
         return out;
+    }
+
+    @Override
+    public int generateReport(Report report) throws RemoteException {
+        Connection conn = ConnectDB.connectDB();
+        String reportContent = "";
+        for (PersonContentTime pct: report.getPersonContentTimes()){
+            reportContent += "[ "+ pct.getTimeBegin() +" ~ "+ pct.getTimeEnd() +" ] "+pct.getName()+" - "+ pct.getContent() +"\n";
+        }
+        String sql = "insert into reports (meetingId, reportContent) values (?, ?);";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, report.getMeetingId());
+            ps.setString(2, reportContent);
+            int i = ps.executeUpdate();
+            return i;
+        } catch (SQLException ex) {
+            Logger.getLogger(RemoteImpl.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return 0;
     }
 }
