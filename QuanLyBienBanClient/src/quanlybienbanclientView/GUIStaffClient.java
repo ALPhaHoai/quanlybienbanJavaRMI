@@ -44,7 +44,7 @@ public class GUIStaffClient extends javax.swing.JFrame {
                 Object[] row = { "MID"+u.getId(), u.getTitle()};
                 model.addRow(row);
             }
-            GUIStaffClient.jTable1.setModel(model);
+            GUIStaffClient.meetingTable.setModel(model);
         } catch (Exception ex) {
             Logger.getLogger(GUIAdminClient.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -76,7 +76,7 @@ public class GUIStaffClient extends javax.swing.JFrame {
         nameLabel = new javax.swing.JLabel();
         logoutButton = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
-        jTable1 = new javax.swing.JTable();
+        meetingTable = new javax.swing.JTable();
         jLabel2 = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
         meetingIdTF = new javax.swing.JTextField();
@@ -114,7 +114,7 @@ public class GUIStaffClient extends javax.swing.JFrame {
             }
         });
 
-        jTable1.setModel(new javax.swing.table.DefaultTableModel(
+        meetingTable.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null},
                 {null, null},
@@ -133,12 +133,12 @@ public class GUIStaffClient extends javax.swing.JFrame {
                 return canEdit [columnIndex];
             }
         });
-        jTable1.addMouseListener(new java.awt.event.MouseAdapter() {
+        meetingTable.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mousePressed(java.awt.event.MouseEvent evt) {
-                jTable1MousePressed(evt);
+                meetingTableMousePressed(evt);
             }
         });
-        jScrollPane1.setViewportView(jTable1);
+        jScrollPane1.setViewportView(meetingTable);
 
         jLabel2.setText("Meeting title");
 
@@ -219,6 +219,11 @@ public class GUIStaffClient extends javax.swing.JFrame {
         jScrollPane3.setViewportView(reportPartTable);
 
         deleteUploadButton.setText("Delete File Selected");
+        deleteUploadButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                deleteUploadButtonActionPerformed(evt);
+            }
+        });
 
         jLabel5.setText("Preview File selected");
 
@@ -352,11 +357,11 @@ public class GUIStaffClient extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jTable1MousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable1MousePressed
-        int row = GUIStaffClient.jTable1.getSelectedRow();
-        this.meetingIdTF.setText(GUIStaffClient.jTable1.getValueAt(row, 0).toString());
-        this.meetingTitleTF.setText(GUIStaffClient.jTable1.getValueAt(row, 1).toString());
-    }//GEN-LAST:event_jTable1MousePressed
+    private void meetingTableMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_meetingTableMousePressed
+        int row = GUIStaffClient.meetingTable.getSelectedRow();
+        this.meetingIdTF.setText(GUIStaffClient.meetingTable.getValueAt(row, 0).toString());
+        this.meetingTitleTF.setText(GUIStaffClient.meetingTable.getValueAt(row, 1).toString());
+    }//GEN-LAST:event_meetingTableMousePressed
 
     private void chooseButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chooseButtonActionPerformed
         JFileChooser jfc = new JFileChooser();
@@ -392,6 +397,10 @@ public class GUIStaffClient extends javax.swing.JFrame {
 
     private void uploadButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_uploadButtonActionPerformed
         final int PERSONCONTENT=0, CONTENTTIME=1;
+        if("".equals(this.fileNameTextField.getText())){
+            JOptionPane.showMessageDialog(rootPane, "Please choose a file first!");
+            return;
+        }
         if(JOptionPane.showConfirmDialog(rootPane, "Are you sure?","",JOptionPane.YES_NO_OPTION) == 0){
             ReportPart reportPart = new ReportPart();
             reportPart.setMeetingId(Integer.parseInt(this.meetingIdTF.getText().substring(3)));
@@ -440,14 +449,31 @@ public class GUIStaffClient extends javax.swing.JFrame {
     }//GEN-LAST:event_logoutButtonActionPerformed
 
     private void generateReportButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_generateReportButtonActionPerformed
-        GenerateReport.meetingId = Integer.parseInt(this.meetingIdTF.getText().substring(3));
-        GenerateReport generateReport = new GenerateReport();
-        generateReport.setVisible(true);
+        
+        if (GUIStaffClient.meetingTable.getSelectedRow() == -1){
+            JOptionPane.showMessageDialog(rootPane, "Choose a meeting first!");
+            return;
+        }
+        else{
+            GenerateReport.meetingId = Integer.parseInt(this.meetingIdTF.getText().substring(3));
+            GenerateReport generateReport = new GenerateReport();
+            generateReport.setVisible(true);
+        }
     }//GEN-LAST:event_generateReportButtonActionPerformed
 
     private void reportPartTableMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_reportPartTableMousePressed
         // TODO add your handling code here:
     }//GEN-LAST:event_reportPartTableMousePressed
+
+    private void deleteUploadButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteUploadButtonActionPerformed
+        if(GUIStaffClient.reportPartTable.getSelectedRow() == -1){
+            JOptionPane.showMessageDialog(rootPane, "Choose a report part file first!");
+            return;
+        }
+        else{
+        
+        }
+    }//GEN-LAST:event_deleteUploadButtonActionPerformed
 
     /**
      * @param args the command line arguments
@@ -504,11 +530,11 @@ public class GUIStaffClient extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jScrollPane4;
-    public static javax.swing.JTable jTable1;
     private javax.swing.JTextArea jTextArea1;
     private javax.swing.JTextArea jTextArea2;
     private javax.swing.JButton logoutButton;
     private javax.swing.JTextField meetingIdTF;
+    public static javax.swing.JTable meetingTable;
     private javax.swing.JTextField meetingTitleTF;
     private javax.swing.JLabel nameLabel;
     public static javax.swing.JTable reportPartTable;

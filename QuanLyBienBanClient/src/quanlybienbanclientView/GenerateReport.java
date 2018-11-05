@@ -209,12 +209,20 @@ public class GenerateReport extends javax.swing.JFrame {
         if(JOptionPane.showConfirmDialog(rootPane, "Are you sure?", "", JOptionPane.YES_NO_OPTION)==0){
             // get list all person-content in person-contentpart
             String personContentPart = this.personContentPartTextArea.getText();
+            if("".equals(personContentPart)){
+                JOptionPane.showMessageDialog(rootPane, "Input file have wrong type. Can't not generate report!\n Choose a right input format or Add new report part file!");
+                return;
+            }
             String[] linesInPCPart = personContentPart.split(System.getProperty("line.separator"));
             List<PersonContent> personContents = new ArrayList<>();
             for (String line: linesInPCPart){
                 if (line.length() != 0){
                     PersonContent personContent = new PersonContent();
                     String[] parts = line.split("-");
+                    if (parts.length != 2){
+                        JOptionPane.showMessageDialog(rootPane, "Input file have wrong type. Can't not generate report!\n Choose a right input format or Add new report part file!");
+                        return;
+                    }
                     personContent.setName(parts[0]);
                     personContent.setContent(parts[1]);
                     personContents.add(personContent);
@@ -223,14 +231,26 @@ public class GenerateReport extends javax.swing.JFrame {
 
             // get list all content-time in content-timepart
             String contentTimePart = this.contentTimePartTextArea.getText();
-            String[] linesInCTPart = contentTimePart.split("\n");
+            if("".equals(contentTimePart)){
+                JOptionPane.showMessageDialog(rootPane, "Input file have wrong type. Can't not generate report!\n Choose a right input format or Add new report part file!");
+                return;
+            }
+            String[] linesInCTPart = contentTimePart.split(System.getProperty("line.separator"));
             List<ContentTime> contentTimes = new ArrayList<>();
             for (String line: linesInCTPart){
                 if (line.length() != 0){
                     ContentTime contentTime = new ContentTime();
                     String[] parts = line.split("\\[");
+                    if (parts.length != 2){
+                        JOptionPane.showMessageDialog(rootPane, "Input file have wrong type. Can't not generate report!\n Choose a right input format or Add new report part file!");
+                        return;
+                    }
                     contentTime.setContent(parts[0]);
                     String[] timeparts = parts[1].split("\\~");
+                    if (timeparts.length != 2){
+                        JOptionPane.showMessageDialog(rootPane, "Input file have wrong type. Can't not generate report!\n Choose a right input format or Add new report part file!");
+                        return;
+                    }
                     contentTime.setTimeBegin(timeparts[0]);
                     contentTime.setTimeEnd(timeparts[1].substring(0, timeparts[1].length()-1));
                     contentTimes.add(contentTime);
