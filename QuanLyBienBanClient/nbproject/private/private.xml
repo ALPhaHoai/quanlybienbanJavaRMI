@@ -5,8 +5,10 @@
         <group>
             <file>file:/home/wnncr/Desktop/QuanLyBienBan/QuanLyBienBanClient/src/quanlybienbanclientController/MeetingController.java</file>
             <file>file:/home/wnncr/Desktop/QuanLyBienBan/QuanLyBienBanClient/src/quanlybienbanclientModel/ReportModel.java</file>
+            <file>file:/home/wnncr/Desktop/QuanLyBienBan/QuanLyBienBanClient/src/quanlybienbanclientModel/ReportPartModel.java</file>
             <file>file:/home/wnncr/Desktop/QuanLyBienBan/QuanLyBienBanClient/src/quanlybienbanclientView/GenerateReport.java</file>
             <file>file:/home/wnncr/Desktop/QuanLyBienBan/QuanLyBienBanClient/src/quanlybienbanclientModel/MeetingModel.java</file>
+            <file>file:/home/wnncr/Desktop/QuanLyBienBan/QuanLyBienBanClient/src/quanlybienbanclientView/GUIManagerClient.java</file>
             <file>file:/home/wnncr/Desktop/QuanLyBienBan/QuanLyBienBanClient/src/quanlybienbanclientView/GUIStaffClient.java</file>
             <file>file:/home/wnncr/Desktop/QuanLyBienBan/QuanLyBienBanClient/src/quanlybienbanclientController/ReportController.java</file>
         </group>

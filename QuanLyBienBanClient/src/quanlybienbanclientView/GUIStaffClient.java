@@ -15,6 +15,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -35,7 +38,7 @@ public class GUIStaffClient extends javax.swing.JFrame {
     private ReportPartController reportPartController;
     private File selectedFile;
     public static User user;
-    public static void updateTable(List<Meeting> list){
+    public static void updateMeetingTable(List<Meeting> list){
         Object[] column = {"Meeting Id", "Meeting Title"};
         DefaultTableModel model = new DefaultTableModel();
         model.setColumnIdentifiers(column);
@@ -49,6 +52,21 @@ public class GUIStaffClient extends javax.swing.JFrame {
             Logger.getLogger(GUIAdminClient.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+    
+    public static void updateReportPartTable(List<ReportPart> list){
+        Object[] column = {"Id","File Uploaded"};
+        DefaultTableModel model = new DefaultTableModel();
+        model.setColumnIdentifiers(column);
+        try {
+            for (ReportPart rp : list ){
+                Object[] row = { rp.getId(), rp.getFileName() };
+                model.addRow(row);
+            }
+            GUIStaffClient.reportPartTable.setModel(model);
+        } catch (Exception ex) {
+            Logger.getLogger(GUIAdminClient.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
     /**
      * Creates new form GUIStaffClient
      */
@@ -58,7 +76,9 @@ public class GUIStaffClient extends javax.swing.JFrame {
         initComponents();
         this.nameLabel.setText(this.user.getUsername());
         List<Meeting> list = meetingController.getMeetings();
-        GUIStaffClient.updateTable(list);
+        GUIStaffClient.updateMeetingTable(list);
+        GUIStaffClient.meetingTable.setAutoCreateRowSorter(true);
+        GUIStaffClient.reportPartTable.setAutoCreateRowSorter(true);
     }
 
     /**
@@ -97,7 +117,7 @@ public class GUIStaffClient extends javax.swing.JFrame {
         deleteUploadButton = new javax.swing.JButton();
         jLabel5 = new javax.swing.JLabel();
         jScrollPane4 = new javax.swing.JScrollPane();
-        jTextArea2 = new javax.swing.JTextArea();
+        filePreviewTextArea = new javax.swing.JTextArea();
         jLabel6 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -194,17 +214,14 @@ public class GUIStaffClient extends javax.swing.JFrame {
 
         reportPartTable.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null},
-                {null},
-                {null},
-                {null}
+
             },
             new String [] {
-                "File Uploaded"
+                "Id", "File Uploaded"
             }
         ) {
             boolean[] canEdit = new boolean [] {
-                false
+                false, false
             };
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
@@ -227,9 +244,9 @@ public class GUIStaffClient extends javax.swing.JFrame {
 
         jLabel5.setText("Preview File selected");
 
-        jTextArea2.setColumns(20);
-        jTextArea2.setRows(5);
-        jScrollPane4.setViewportView(jTextArea2);
+        filePreviewTextArea.setColumns(20);
+        filePreviewTextArea.setRows(5);
+        jScrollPane4.setViewportView(filePreviewTextArea);
 
         jLabel6.setText("Preview File Upload");
 
@@ -355,12 +372,19 @@ public class GUIStaffClient extends javax.swing.JFrame {
         );
 
         pack();
+        setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
 
     private void meetingTableMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_meetingTableMousePressed
         int row = GUIStaffClient.meetingTable.getSelectedRow();
         this.meetingIdTF.setText(GUIStaffClient.meetingTable.getValueAt(row, 0).toString());
         this.meetingTitleTF.setText(GUIStaffClient.meetingTable.getValueAt(row, 1).toString());
+        this.filePreviewTextArea.setText("");
+        List<ReportPart> listReportPartPC = reportPartController.getReportPartIds(0, Integer.parseInt(GUIStaffClient.meetingTable.getValueAt(row, 0).toString().substring(3)));
+        List<ReportPart> listReportPartCT = reportPartController.getReportPartIds(1, Integer.parseInt(GUIStaffClient.meetingTable.getValueAt(row, 0).toString().substring(3)));
+        List<ReportPart> listAllReportPart = new ArrayList<>(listReportPartPC);
+        listAllReportPart.addAll(listReportPartCT);
+        GUIStaffClient.updateReportPartTable(listAllReportPart);
     }//GEN-LAST:event_meetingTableMousePressed
 
     private void chooseButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chooseButtonActionPerformed
@@ -397,6 +421,11 @@ public class GUIStaffClient extends javax.swing.JFrame {
 
     private void uploadButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_uploadButtonActionPerformed
         final int PERSONCONTENT=0, CONTENTTIME=1;
+        if (GUIStaffClient.meetingTable.getSelectedRow() == -1){
+            JOptionPane.showMessageDialog(rootPane, "Please choose a meeting first!");
+            return;
+        }
+        int row = GUIStaffClient.meetingTable.getSelectedRow();
         if("".equals(this.fileNameTextField.getText())){
             JOptionPane.showMessageDialog(rootPane, "Please choose a file first!");
             return;
@@ -423,6 +452,11 @@ public class GUIStaffClient extends javax.swing.JFrame {
                 JOptionPane.showMessageDialog(rootPane, "Failed! Try again!");
         }
         
+        List<ReportPart> listReportPartPC = reportPartController.getReportPartIds(0, Integer.parseInt(GUIStaffClient.meetingTable.getValueAt(row, 0).toString().substring(3)));
+        List<ReportPart> listReportPartCT = reportPartController.getReportPartIds(1, Integer.parseInt(GUIStaffClient.meetingTable.getValueAt(row, 0).toString().substring(3)));
+        List<ReportPart> listAllReportPart = new ArrayList<>(listReportPartPC);
+        listAllReportPart.addAll(listReportPartCT);
+        GUIStaffClient.updateReportPartTable(listAllReportPart);
     }//GEN-LAST:event_uploadButtonActionPerformed
 
     private void jRadioButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jRadioButton2ActionPerformed
@@ -462,7 +496,10 @@ public class GUIStaffClient extends javax.swing.JFrame {
     }//GEN-LAST:event_generateReportButtonActionPerformed
 
     private void reportPartTableMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_reportPartTableMousePressed
-        // TODO add your handling code here:
+        int row = GUIStaffClient.reportPartTable.getSelectedRow();
+        int reportPartId = Integer.parseInt(GUIStaffClient.reportPartTable.getValueAt(row, 0).toString());
+        String reportPartContent = reportPartController.getReportPartContent(reportPartId);
+        this.filePreviewTextArea.setText(reportPartContent);
     }//GEN-LAST:event_reportPartTableMousePressed
 
     private void deleteUploadButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteUploadButtonActionPerformed
@@ -516,6 +553,7 @@ public class GUIStaffClient extends javax.swing.JFrame {
     private javax.swing.JButton deleteUploadButton;
     private javax.swing.JButton editReportButton;
     private javax.swing.JTextField fileNameTextField;
+    private javax.swing.JTextArea filePreviewTextArea;
     private javax.swing.JButton generateReportButton;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
@@ -531,7 +569,6 @@ public class GUIStaffClient extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JTextArea jTextArea1;
-    private javax.swing.JTextArea jTextArea2;
     private javax.swing.JButton logoutButton;
     private javax.swing.JTextField meetingIdTF;
     public static javax.swing.JTable meetingTable;
