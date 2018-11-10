@@ -5,9 +5,13 @@
  */
 package quanlybienbanclientModel;
 
+import entity.Meeting;
+import entity.PeopleEditReport;
 import entity.Report;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import registry.Register;
@@ -18,10 +22,71 @@ import remoteInterface.RemoteInterface;
  * @author thanhdovan
  */
 public class ReportModel {
-    public int generateReport(Report report){
+    public int generateReport(Report report, Meeting meeting){
         try {
             RemoteInterface stub = Register.registry();
-            return stub.generateReport(report);
+            return stub.generateReport(report, meeting);
+        } catch (RemoteException | NotBoundException ex) {
+            Logger.getLogger(ReportModel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return 0;
+    }
+    
+    public List<Report> getReports(int meetingId){
+        List<Report> reports = new ArrayList<>();
+        try {
+            RemoteInterface stub = Register.registry();
+            return stub.getReports(meetingId);
+        } catch (RemoteException | NotBoundException ex) {
+            Logger.getLogger(ReportModel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return reports;
+    }
+    
+    public String getReportContent(int reportId){
+        String reportContent = "";
+        try {
+            RemoteInterface stub = Register.registry();
+            return stub.getReportContent(reportId);
+        } catch (RemoteException | NotBoundException ex) {
+            Logger.getLogger(ReportModel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return reportContent;
+    }
+    
+    public int addPeopleEdit(PeopleEditReport per){
+        try {
+            RemoteInterface stub = Register.registry();
+            return stub.addPeopleEdit(per);
+        } catch (RemoteException | NotBoundException ex) {
+            Logger.getLogger(ReportModel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return 0;
+    }
+    public List<Integer> getIdOfUserEdit(int reportId){
+        try {
+            RemoteInterface stub = Register.registry();
+            return stub.getIdOfUserEdit(reportId);
+        } catch (RemoteException | NotBoundException ex) {
+            Logger.getLogger(ReportModel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
+    }
+    
+    public int getPeopleEdit(PeopleEditReport per){
+        try {
+            RemoteInterface stub = Register.registry();
+            return stub.getPeopleEdit(per);
+        } catch (RemoteException | NotBoundException ex) {
+            Logger.getLogger(ReportModel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return 0;
+    }
+    
+    public int removePeopleEdit(int peopleEditId){
+        try {
+            RemoteInterface stub = Register.registry();
+            return stub.removePeopleEdit(peopleEditId);
         } catch (RemoteException | NotBoundException ex) {
             Logger.getLogger(ReportModel.class.getName()).log(Level.SEVERE, null, ex);
         }

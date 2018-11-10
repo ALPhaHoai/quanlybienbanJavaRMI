@@ -6,12 +6,17 @@
 package entity;
 
 import java.io.Serializable;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author thanhdovan
  */
-public class PersonContentTime implements Serializable{
+public class PersonContentTime implements Serializable, Comparable{
     private String name;
     private String content;
     private String timeBegin;
@@ -50,6 +55,20 @@ public class PersonContentTime implements Serializable{
 
     public void setTimeEnd(String timeEnd) {
         this.timeEnd = timeEnd;
+    }
+
+    @Override
+    public int compareTo(Object o) {
+        String timeBegin = ((PersonContentTime)o).getTimeBegin();
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+        try {
+            Date d1 = sdf.parse(timeBegin);
+            Date d2 = sdf.parse(this.timeBegin);
+            return (int) (d2.getTime() - d1.getTime());
+        } catch (ParseException ex) {
+            Logger.getLogger(PersonContentTime.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return 0;
     }
     
 }

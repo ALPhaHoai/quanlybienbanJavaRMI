@@ -6,6 +6,7 @@
 package quanlybienbanclientView;
 
 import entity.Meeting;
+import entity.Report;
 import entity.User;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
@@ -22,6 +23,7 @@ import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 import quanlybienbanclientController.MeetingController;
+import quanlybienbanclientController.ReportController;
 import registry.Register;
 import remoteInterface.RemoteInterface;
 
@@ -31,6 +33,7 @@ import remoteInterface.RemoteInterface;
  */
 public class GUIManagerClient extends javax.swing.JFrame {
     private final MeetingController meetingController;
+    private final ReportController reportController;
     public static User user;
     public static void updateTable(List<Meeting> list){
         Object[] column = {"Id", "Meeting", "Date", "Time Start"};
@@ -53,6 +56,7 @@ public class GUIManagerClient extends javax.swing.JFrame {
         initComponents();
         this.nameLabel.setText(user.getUsername());
         meetingController = new MeetingController();
+        reportController = new ReportController();
         List<Meeting> list = meetingController.getMeetings();
         GUIManagerClient.updateTable(list);
     }
@@ -79,7 +83,6 @@ public class GUIManagerClient extends javax.swing.JFrame {
         jLabel3 = new javax.swing.JLabel();
         addMeetingButton = new javax.swing.JButton();
         viewReportButton = new javax.swing.JButton();
-        exportReportButton = new javax.swing.JButton();
         dateChooserCombo1 = new datechooser.beans.DateChooserCombo();
         editButton = new javax.swing.JButton();
         deleteButton = new javax.swing.JButton();
@@ -148,8 +151,11 @@ public class GUIManagerClient extends javax.swing.JFrame {
         });
 
         viewReportButton.setText("View Report");
-
-        exportReportButton.setText("Export Report");
+        viewReportButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                viewReportButtonActionPerformed(evt);
+            }
+        });
 
         editButton.setText("Edit meeting info");
         editButton.addActionListener(new java.awt.event.ActionListener() {
@@ -195,13 +201,10 @@ public class GUIManagerClient extends javax.swing.JFrame {
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(dateChooserCombo1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                             .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                                    .addComponent(editButton, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                    .addComponent(viewReportButton, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addComponent(editButton)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                    .addComponent(deleteButton, javax.swing.GroupLayout.DEFAULT_SIZE, 147, Short.MAX_VALUE)
-                                    .addComponent(exportReportButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))))
+                                .addComponent(deleteButton, javax.swing.GroupLayout.PREFERRED_SIZE, 147, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(viewReportButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(addMeetingButton)
                         .addGap(0, 0, Short.MAX_VALUE)))
@@ -229,9 +232,7 @@ public class GUIManagerClient extends javax.swing.JFrame {
                             .addComponent(editButton)
                             .addComponent(deleteButton))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(viewReportButton)
-                            .addComponent(exportReportButton)))
+                        .addComponent(viewReportButton))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGap(18, 18, 18)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -349,6 +350,25 @@ public class GUIManagerClient extends javax.swing.JFrame {
         
     }//GEN-LAST:event_deleteButtonActionPerformed
 
+    private void viewReportButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_viewReportButtonActionPerformed
+        if (GUIManagerClient.jTable1.getSelectedRow() == -1){
+            JOptionPane.showMessageDialog(rootPane, "Choose a meeting first!");
+            return;
+        } else {
+            int row = GUIManagerClient.jTable1.getSelectedRow();
+            int meetingId = Integer.parseInt(GUIManagerClient.jTable1.getValueAt(row,0).toString().substring(3));
+            List<Report> reports = reportController.getReports(meetingId);
+            if(reports.isEmpty()){
+                JOptionPane.showMessageDialog(rootPane, "Haven't have report yet! Generate report first!");
+                return;
+            }
+            GUIViewReport.meeting = meetingController.getMeeting(meetingId);
+            GUIViewReport.user= GUIManagerClient.user;
+            GUIViewReport viewReport = new GUIViewReport();
+            viewReport.setVisible(true);
+        }
+    }//GEN-LAST:event_viewReportButtonActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -385,7 +405,6 @@ public class GUIManagerClient extends javax.swing.JFrame {
     private datechooser.beans.DateChooserCombo dateChooserCombo1;
     private javax.swing.JButton deleteButton;
     private javax.swing.JButton editButton;
-    private javax.swing.JButton exportReportButton;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;

@@ -69,16 +69,11 @@
                                   <Component id="dateChooserCombo1" max="32767" attributes="0"/>
                               </Group>
                               <Group type="102" alignment="0" attributes="0">
-                                  <Group type="103" groupAlignment="1" max="-2" attributes="0">
-                                      <Component id="editButton" alignment="0" max="32767" attributes="0"/>
-                                      <Component id="viewReportButton" alignment="0" max="32767" attributes="0"/>
-                                  </Group>
+                                  <Component id="editButton" min="-2" max="-2" attributes="0"/>
                                   <EmptySpace max="32767" attributes="0"/>
-                                  <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                                      <Component id="deleteButton" pref="147" max="32767" attributes="0"/>
-                                      <Component id="exportReportButton" max="32767" attributes="0"/>
-                                  </Group>
+                                  <Component id="deleteButton" min="-2" pref="147" max="-2" attributes="0"/>
                               </Group>
+                              <Component id="viewReportButton" max="32767" attributes="0"/>
                           </Group>
                       </Group>
                       <Group type="102" alignment="0" attributes="0">
@@ -116,10 +111,7 @@
                               <Component id="deleteButton" alignment="3" min="-2" max="-2" attributes="0"/>
                           </Group>
                           <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                          <Group type="103" groupAlignment="3" attributes="0">
-                              <Component id="viewReportButton" alignment="3" min="-2" max="-2" attributes="0"/>
-                              <Component id="exportReportButton" alignment="3" min="-2" max="-2" attributes="0"/>
-                          </Group>
+                          <Component id="viewReportButton" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <Group type="102" alignment="0" attributes="0">
                           <EmptySpace min="-2" pref="18" max="-2" attributes="0"/>
@@ -249,11 +241,9 @@
           <Properties>
             <Property name="text" type="java.lang.String" value="View Report"/>
           </Properties>
-        </Component>
-        <Component class="javax.swing.JButton" name="exportReportButton">
-          <Properties>
-            <Property name="text" type="java.lang.String" value="Export Report"/>
-          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="viewReportButtonActionPerformed"/>
+          </Events>
         </Component>
         <Component class="datechooser.beans.DateChooserCombo" name="dateChooserCombo1">
         </Component>

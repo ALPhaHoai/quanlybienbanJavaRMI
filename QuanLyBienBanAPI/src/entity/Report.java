@@ -6,6 +6,7 @@
 package entity;
 
 import java.io.Serializable;
+import java.sql.Time;
 import java.util.List;
 
 /**
@@ -15,8 +16,25 @@ import java.util.List;
 public class Report implements Serializable{
     private int id;
     private int meetingId;
+    private String reportName;
     private List<PersonContentTime> personContentTimes;
+    private Time timeCreate;
 
+    public void setReportName(String reportName) {
+        this.reportName = reportName;
+    }
+
+    public void setTimeCreate(Time timeCreate) {
+        this.timeCreate = timeCreate;
+    }
+
+    public String getReportName() {
+        return reportName;
+    }
+
+    public Time getTimeCreate() {
+        return timeCreate;
+    }
     public Report() {
     }
 

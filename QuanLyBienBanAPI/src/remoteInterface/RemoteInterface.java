@@ -6,6 +6,7 @@
 package remoteInterface;
 
 import entity.Meeting;
+import entity.PeopleEditReport;
 import entity.Report;
 import entity.ReportPart;
 import java.rmi.Remote;
@@ -41,7 +42,9 @@ public interface RemoteInterface extends Remote{
     // end interface for Meeting
     
     //interface for report
-    public int generateReport(Report report) throws RemoteException;
+    public int generateReport(Report report, Meeting meeting) throws RemoteException;
+    public List<Report> getReports(int meetingId) throws RemoteException;
+    public String getReportContent(int reportId) throws RemoteException;
     //end interface for report
     
     //interface for filetext
@@ -49,4 +52,9 @@ public interface RemoteInterface extends Remote{
     public List<ReportPart> getReportParts(int type, int meetingId) throws RemoteException;
     public String getReportPartContent(int reportPartId) throws RemoteException;
     //end interface for filetext
+
+    public int addPeopleEdit(PeopleEditReport per) throws RemoteException;
+    public List<Integer> getIdOfUserEdit(int reportId) throws RemoteException;
+    public int getPeopleEdit(PeopleEditReport per) throws RemoteException;
+    public int removePeopleEdit(int peopleEditId) throws RemoteException;
 }

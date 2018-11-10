@@ -6,6 +6,7 @@
 package quanlybienbanclientView;
 
 import entity.Meeting;
+import entity.Report;
 import entity.ReportPart;
 import entity.User;
 import java.io.BufferedInputStream;
@@ -16,8 +17,6 @@ import java.io.IOException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -25,7 +24,9 @@ import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 import quanlybienbanclientController.MeetingController;
+import quanlybienbanclientController.ReportController;
 import quanlybienbanclientController.ReportPartController;
+import static quanlybienbanclientView.GUIViewReport.meeting;
 import registry.Register;
 import remoteInterface.RemoteInterface;
 
@@ -34,8 +35,9 @@ import remoteInterface.RemoteInterface;
  * @author thanhdovan
  */
 public class GUIStaffClient extends javax.swing.JFrame {
-    private MeetingController meetingController;
-    private ReportPartController reportPartController;
+    private final MeetingController meetingController;
+    private final ReportPartController reportPartController;
+    private final ReportController reportController;
     private File selectedFile;
     public static User user;
     public static void updateMeetingTable(List<Meeting> list){
@@ -73,6 +75,7 @@ public class GUIStaffClient extends javax.swing.JFrame {
     public GUIStaffClient() {
         meetingController = new MeetingController();
         reportPartController = new ReportPartController();
+        reportController = new ReportController();
         initComponents();
         this.nameLabel.setText(this.user.getUsername());
         List<Meeting> list = meetingController.getMeetings();
@@ -108,7 +111,6 @@ public class GUIStaffClient extends javax.swing.JFrame {
         jRadioButton2 = new javax.swing.JRadioButton();
         uploadButton = new javax.swing.JButton();
         viewReportButton = new javax.swing.JButton();
-        editReportButton = new javax.swing.JButton();
         jScrollPane2 = new javax.swing.JScrollPane();
         jTextArea1 = new javax.swing.JTextArea();
         generateReportButton = new javax.swing.JButton();
@@ -198,8 +200,11 @@ public class GUIStaffClient extends javax.swing.JFrame {
         });
 
         viewReportButton.setText("View Report");
-
-        editReportButton.setText("Edit Report");
+        viewReportButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                viewReportButtonActionPerformed(evt);
+            }
+        });
 
         jTextArea1.setColumns(20);
         jTextArea1.setRows(5);
@@ -273,11 +278,8 @@ public class GUIStaffClient extends javax.swing.JFrame {
                             .addGroup(jPanel1Layout.createSequentialGroup()
                                 .addGap(6, 6, 6)
                                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addGroup(jPanel1Layout.createSequentialGroup()
-                                        .addComponent(viewReportButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(editReportButton, javax.swing.GroupLayout.PREFERRED_SIZE, 172, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                    .addComponent(generateReportButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                                    .addComponent(generateReportButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addComponent(viewReportButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .addComponent(jLabel2)
@@ -355,8 +357,7 @@ public class GUIStaffClient extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(uploadButton)
-                    .addComponent(viewReportButton)
-                    .addComponent(editReportButton))
+                    .addComponent(viewReportButton))
                 .addGap(7, 7, 7))
         );
 
@@ -489,7 +490,18 @@ public class GUIStaffClient extends javax.swing.JFrame {
             return;
         }
         else{
-            GenerateReport.meetingId = Integer.parseInt(this.meetingIdTF.getText().substring(3));
+            
+            GenerateReport.meeting = meetingController.getMeeting(Integer.parseInt(this.meetingIdTF.getText().substring(3)));
+            List<ReportPart> reportPartPersonContents = reportPartController.getReportPartIds(0, meetingController.getMeeting(Integer.parseInt(this.meetingIdTF.getText().substring(3))).getId());
+            List<ReportPart> reportPartContentTimes = reportPartController.getReportPartIds(1, meetingController.getMeeting(Integer.parseInt(this.meetingIdTF.getText().substring(3))).getId());
+            if(reportPartPersonContents.isEmpty()){
+                JOptionPane.showMessageDialog(rootPane, "Haven't have PersonContent file yet! Upload file first!");
+                return;
+            }
+            if(reportPartContentTimes.isEmpty()){
+                JOptionPane.showMessageDialog(rootPane, "Haven't have ContentTime file yet! Upload file first!");
+                return;
+            }
             GenerateReport generateReport = new GenerateReport();
             generateReport.setVisible(true);
         }
@@ -511,6 +523,25 @@ public class GUIStaffClient extends javax.swing.JFrame {
         
         }
     }//GEN-LAST:event_deleteUploadButtonActionPerformed
+
+    private void viewReportButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_viewReportButtonActionPerformed
+        if (GUIStaffClient.meetingTable.getSelectedRow() == -1){
+            JOptionPane.showMessageDialog(rootPane, "Choose a meeting first!");
+            return;
+        }
+        else {
+            
+            GUIViewReport.meeting = meetingController.getMeeting(Integer.parseInt(this.meetingIdTF.getText().substring(3)));
+            List<Report> reports = reportController.getReports(meetingController.getMeeting(Integer.parseInt(this.meetingIdTF.getText().substring(3))).getId());
+            if(reports.isEmpty()){
+                JOptionPane.showMessageDialog(rootPane, "Haven't have report yet! Generate report first!");
+                return;
+            }
+            GUIViewReport.user= GUIStaffClient.user;
+            GUIViewReport viewReport = new GUIViewReport();
+            viewReport.setVisible(true);
+        }
+    }//GEN-LAST:event_viewReportButtonActionPerformed
 
     /**
      * @param args the command line arguments
@@ -551,7 +582,6 @@ public class GUIStaffClient extends javax.swing.JFrame {
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.JButton chooseButton;
     private javax.swing.JButton deleteUploadButton;
-    private javax.swing.JButton editReportButton;
     private javax.swing.JTextField fileNameTextField;
     private javax.swing.JTextArea filePreviewTextArea;
     private javax.swing.JButton generateReportButton;
