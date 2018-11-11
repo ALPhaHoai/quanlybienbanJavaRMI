@@ -5,6 +5,8 @@
  */
 package mainServer;
 
+import java.rmi.AlreadyBoundException;
+import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
@@ -137,17 +139,15 @@ public class GUIServer extends javax.swing.JFrame {
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         this.jButton1.setVisible(false);
         this.jButton2.setVisible(true);
-        try { 
-            
+        try {
             Registry registry = LocateRegistry.createRegistry(Registry.REGISTRY_PORT); 
             RemoteImpl remoteObjUser = new RemoteImpl(); 
             RemoteInterface stub = (RemoteInterface) UnicastRemoteObject.exportObject(remoteObjUser, 0);  
             registry.bind("remoteInterface", stub);  
             System.err.println("Server ready \n");
             GUIServer.jTextArea1.append("Server ready. \n");
-        } catch (Exception e) { 
+        } catch (AlreadyBoundException | RemoteException e) { 
             System.err.println("Server exception: " + e.toString()); 
-            e.printStackTrace();
         }
         
     }//GEN-LAST:event_jButton1ActionPerformed

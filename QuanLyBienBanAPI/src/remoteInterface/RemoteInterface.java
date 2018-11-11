@@ -45,6 +45,8 @@ public interface RemoteInterface extends Remote{
     public int generateReport(Report report, Meeting meeting) throws RemoteException;
     public List<Report> getReports(int meetingId) throws RemoteException;
     public String getReportContent(int reportId) throws RemoteException;
+    public Report getReport(int reportId) throws RemoteException;
+    public int addReport(Report report) throws RemoteException;
     //end interface for report
     
     //interface for filetext

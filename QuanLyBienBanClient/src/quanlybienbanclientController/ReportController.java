@@ -22,6 +22,14 @@ public class ReportController {
         this.reportModel = new ReportModel();
     }
     
+    public int addReport(Report report){
+        return reportModel.addReport(report);
+    }
+    
+    public Report getReport(int reportId){
+        return reportModel.getReport(reportId);
+    }
+    
     public List<Report> getReports(int meetingId){
         return reportModel.getReports(meetingId);
     }

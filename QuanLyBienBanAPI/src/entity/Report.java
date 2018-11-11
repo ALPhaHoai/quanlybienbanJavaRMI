@@ -18,7 +18,16 @@ public class Report implements Serializable{
     private int meetingId;
     private String reportName;
     private List<PersonContentTime> personContentTimes;
+    private String reportContent;
     private Time timeCreate;
+
+    public String getReportContent() {
+        return reportContent;
+    }
+
+    public void setReportContent(String reportContent) {
+        this.reportContent = reportContent;
+    }
 
     public void setReportName(String reportName) {
         this.reportName = reportName;

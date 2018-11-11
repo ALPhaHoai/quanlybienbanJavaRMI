@@ -26,7 +26,6 @@ import javax.swing.table.DefaultTableModel;
 import quanlybienbanclientController.MeetingController;
 import quanlybienbanclientController.ReportController;
 import quanlybienbanclientController.ReportPartController;
-import static quanlybienbanclientView.GUIViewReport.meeting;
 import registry.Register;
 import remoteInterface.RemoteInterface;
 
@@ -121,6 +120,7 @@ public class GUIStaffClient extends javax.swing.JFrame {
         jScrollPane4 = new javax.swing.JScrollPane();
         filePreviewTextArea = new javax.swing.JTextArea();
         jLabel6 = new javax.swing.JLabel();
+        jButton1 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setResizable(false);
@@ -255,6 +255,13 @@ public class GUIStaffClient extends javax.swing.JFrame {
 
         jLabel6.setText("Preview File Upload");
 
+        jButton1.setText("Reload");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -266,8 +273,10 @@ public class GUIStaffClient extends javax.swing.JFrame {
                         .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 215, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(nameLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 290, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(logoutButton, javax.swing.GroupLayout.DEFAULT_SIZE, 178, Short.MAX_VALUE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 94, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(12, 12, 12)
+                        .addComponent(logoutButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
@@ -319,7 +328,8 @@ public class GUIStaffClient extends javax.swing.JFrame {
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel1)
                             .addComponent(nameLabel)
-                            .addComponent(logoutButton))
+                            .addComponent(logoutButton)
+                            .addComponent(jButton1))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 164, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 164, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -543,6 +553,22 @@ public class GUIStaffClient extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_viewReportButtonActionPerformed
 
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        List<Meeting> list = meetingController.getMeetings();
+        this.jTextArea1.setText("");
+        this.fileNameTextField.setText("");
+        this.filePreviewTextArea.setText("");
+        this.meetingIdTF.setText("");
+        this.meetingTitleTF.setText("");
+        GUIStaffClient.updateMeetingTable(list);
+        Object[] column = {"Id","File Uploaded"};
+        DefaultTableModel model = new DefaultTableModel();
+        model.setColumnIdentifiers(column);
+        GUIStaffClient.reportPartTable.setModel(model);
+        GUIStaffClient.meetingTable.setAutoCreateRowSorter(true);
+        GUIStaffClient.reportPartTable.setAutoCreateRowSorter(true);
+    }//GEN-LAST:event_jButton1ActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -585,6 +611,7 @@ public class GUIStaffClient extends javax.swing.JFrame {
     private javax.swing.JTextField fileNameTextField;
     private javax.swing.JTextArea filePreviewTextArea;
     private javax.swing.JButton generateReportButton;
+    private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;

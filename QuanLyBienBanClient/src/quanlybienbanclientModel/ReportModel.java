@@ -22,6 +22,27 @@ import remoteInterface.RemoteInterface;
  * @author thanhdovan
  */
 public class ReportModel {
+    
+    public int addReport(Report report){
+        try{
+            RemoteInterface stub = Register.registry();
+            return stub.addReport(report);
+        } catch (RemoteException | NotBoundException ex) {
+            Logger.getLogger(ReportModel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return 0;
+    }
+    
+    public Report getReport(int reportId){
+        try{
+            RemoteInterface stub = Register.registry();
+            return stub.getReport(reportId);
+        } catch (RemoteException | NotBoundException ex) {
+            Logger.getLogger(ReportModel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
+    }
+    
     public int generateReport(Report report, Meeting meeting){
         try {
             RemoteInterface stub = Register.registry();
