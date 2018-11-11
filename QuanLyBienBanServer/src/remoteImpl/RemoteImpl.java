@@ -382,7 +382,22 @@ public class RemoteImpl implements RemoteInterface {
             Logger.getLogger(RemoteImpl.class.getName()).log(Level.SEVERE, null, ex);
         }
         return 0;
-    } 
+    }
+    
+    @Override
+    public int deleteReportPart(int reportPartId) throws RemoteException{
+        Connection conn = ConnectDB.connectDB();
+        String sql = "DELETE FROM reportparts WHERE id = ?;";
+        try {
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, reportPartId);
+            int i = stmt.executeUpdate();
+            return i;
+        } catch (SQLException ex) {
+            Logger.getLogger(RemoteImpl.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return 0;
+    }
     @Override
     public List<ReportPart> getReportParts(int i, int y) throws RemoteException {
         final int PERSONCONTENT = 0, CONTENTTIME=1;

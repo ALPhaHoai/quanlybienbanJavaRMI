@@ -232,20 +232,24 @@ public class GUIViewReport extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        if(JOptionPane.showConfirmDialog(rootPane, "Did you save your changes?", "", JOptionPane.YES_NO_OPTION) == 0){
-            PeopleEditReport per = new PeopleEditReport();
-            per.setUserId(user.getId());
-            int row = GUIViewReport.reportTable.getSelectedRow();
-            int reportId = Integer.parseInt(GUIViewReport.reportTable.getValueAt(row, 0).toString());
-            per.setReportId(reportId);
-            int peopleEditId = reportController.getPeopleEdit(per);
-            if (peopleEditId == 0){
-                this.dispose();
+        int row = GUIViewReport.reportTable.getSelectedRow();
+        if (row != -1){
+            if(JOptionPane.showConfirmDialog(rootPane, "Did you save your changes?", "", JOptionPane.YES_NO_OPTION) == 0){
+                PeopleEditReport per = new PeopleEditReport();
+                per.setUserId(user.getId());
+                int reportId = Integer.parseInt(GUIViewReport.reportTable.getValueAt(row, 0).toString());
+                per.setReportId(reportId);
+                int peopleEditId = reportController.getPeopleEdit(per);
+                if (peopleEditId == 0){
+                    this.dispose();
+                }
+                else{
+                    reportController.removePeopleEdit(peopleEditId);
+                    this.dispose();
+                }
             }
-            else{
-                reportController.removePeopleEdit(peopleEditId);
-                this.dispose();
-            }
+        } else {
+            this.dispose();
         }
     }//GEN-LAST:event_jButton1ActionPerformed
 
@@ -260,11 +264,23 @@ public class GUIViewReport extends javax.swing.JFrame {
     private void editReportButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_editReportButtonActionPerformed
         content = GUIViewReport.jTextArea2.getText();
         int row = GUIViewReport.reportTable.getSelectedRow();
-        int reportId = Integer.parseInt(GUIViewReport.reportTable.getValueAt(row, 0).toString());
-        List<Integer> userIds = reportController.getIdOfUserEdit(reportId);
-        if (!userIds.isEmpty()){
-            if(JOptionPane.showConfirmDialog(rootPane, "Another user is editting this file! Do you wanna wait? \nYes = Wait and try again later! | No = Edit and discard all changes of others.", "", JOptionPane.YES_NO_OPTION)==0){
-                System.out.println("Yes");
+        if (row != -1){
+            int reportId = Integer.parseInt(GUIViewReport.reportTable.getValueAt(row, 0).toString());
+            List<Integer> userIds = reportController.getIdOfUserEdit(reportId);
+            if (!userIds.isEmpty()){
+                if(JOptionPane.showConfirmDialog(rootPane, "Another user is editting this file! Do you wanna wait? \nYes = Wait and try again later! | No = Edit and discard all changes of others.", "", JOptionPane.YES_NO_OPTION)==0){
+                    System.out.println("Yes");
+                } else {
+                    GUIViewReport.jTextArea2.setEditable(true);
+                    GUIViewReport.reportTable.setEnabled(false);
+                    PeopleEditReport per = new PeopleEditReport();
+                    per.setUserId(user.getId());
+                    per.setReportId(reportId);
+                    reportController.addPeopleEdit(per);
+                    this.cancelButton.setEnabled(true);
+                    this.editReportButton.setEnabled(false);
+                    this.saveButton.setEnabled(true);
+                }
             } else {
                 GUIViewReport.jTextArea2.setEditable(true);
                 GUIViewReport.reportTable.setEnabled(false);
@@ -275,18 +291,10 @@ public class GUIViewReport extends javax.swing.JFrame {
                 this.cancelButton.setEnabled(true);
                 this.editReportButton.setEnabled(false);
                 this.saveButton.setEnabled(true);
+                this.jButton2.setEnabled(false);
             }
         } else {
-            GUIViewReport.jTextArea2.setEditable(true);
-            GUIViewReport.reportTable.setEnabled(false);
-            PeopleEditReport per = new PeopleEditReport();
-            per.setUserId(user.getId());
-            per.setReportId(reportId);
-            reportController.addPeopleEdit(per);
-            this.cancelButton.setEnabled(true);
-            this.editReportButton.setEnabled(false);
-            this.saveButton.setEnabled(true);
-            this.jButton2.setEnabled(false);
+            JOptionPane.showMessageDialog(rootPane, "Choose a report first!");
         }
     }//GEN-LAST:event_editReportButtonActionPerformed
 

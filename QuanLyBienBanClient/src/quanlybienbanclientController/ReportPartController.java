@@ -20,6 +20,10 @@ public class ReportPartController {
         this.reportPartModel = new ReportPartModel();
     }
     
+    
+    public int deleteReportPart(int reportPartId){
+        return reportPartModel.deleteReportPart(reportPartId);
+    }
     public int uploadFile(ReportPart reportPart){
         return reportPartModel.uploadFile(reportPart);
     }
