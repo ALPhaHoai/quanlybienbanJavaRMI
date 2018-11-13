@@ -6,6 +6,7 @@
 package quanlybienbanclientView;
 
 import entity.User;
+import helpfile.EncryptPassword;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.List;
@@ -196,9 +197,9 @@ public class EditUser extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(rootPane, "These fields are required");
             return;
         }
-            
+        String encryptedPasswd = EncryptPassword.getMD5(spassword);
         user.setUsername(susername);
-        user.setPassword(spassword);
+        user.setPassword(encryptedPasswd);
         user.setPosition(sposition);
         user.setFullname(sfullname);
         

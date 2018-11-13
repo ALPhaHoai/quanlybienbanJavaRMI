@@ -1,4 +1,4 @@
-package lib;
+package helpfile;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;

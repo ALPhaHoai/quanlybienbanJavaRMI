@@ -24,6 +24,7 @@ import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 import quanlybienbanclientController.MeetingController;
 import quanlybienbanclientController.ReportController;
+import quanlybienbanclientController.UserController;
 import registry.Register;
 import remoteInterface.RemoteInterface;
 
@@ -33,6 +34,7 @@ import remoteInterface.RemoteInterface;
  */
 public class GUIManagerClient extends javax.swing.JFrame {
     private final MeetingController meetingController;
+    private final UserController userController;
     private final ReportController reportController;
     public static User user;
     public static void updateTable(List<Meeting> list){
@@ -57,6 +59,7 @@ public class GUIManagerClient extends javax.swing.JFrame {
         this.nameLabel.setText(user.getUsername());
         meetingController = new MeetingController();
         reportController = new ReportController();
+        userController = new UserController();
         List<Meeting> list = meetingController.getMeetings();
         GUIManagerClient.updateTable(list);
     }
@@ -87,6 +90,8 @@ public class GUIManagerClient extends javax.swing.JFrame {
         editButton = new javax.swing.JButton();
         deleteButton = new javax.swing.JButton();
         jButton1 = new javax.swing.JButton();
+        reportButton = new javax.swing.JButton();
+        shareButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setResizable(false);
@@ -179,6 +184,15 @@ public class GUIManagerClient extends javax.swing.JFrame {
             }
         });
 
+        reportButton.setText("Reporter");
+        reportButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                reportButtonActionPerformed(evt);
+            }
+        });
+
+        shareButton.setText("Share");
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -201,61 +215,67 @@ public class GUIManagerClient extends javax.swing.JFrame {
                             .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 346, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(viewReportButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(reportButton, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(shareButton, javax.swing.GroupLayout.PREFERRED_SIZE, 147, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(editButton)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(deleteButton, javax.swing.GroupLayout.PREFERRED_SIZE, 147, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addGroup(jPanel1Layout.createSequentialGroup()
                                 .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 64, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(timeText))
                             .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 64, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(meetingText, javax.swing.GroupLayout.DEFAULT_SIZE, 255, Short.MAX_VALUE))
-                            .addGroup(jPanel1Layout.createSequentialGroup()
                                 .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 64, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(dateChooserCombo1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                             .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addComponent(editButton)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(deleteButton, javax.swing.GroupLayout.PREFERRED_SIZE, 147, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addComponent(viewReportButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 64, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(meetingText, javax.swing.GroupLayout.DEFAULT_SIZE, 255, Short.MAX_VALUE)))))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(125, 125, 125)
+                .addGap(18, 18, 18)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(welcomeLabel)
+                    .addComponent(nameLabel)
+                    .addComponent(logoutButton))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 62, Short.MAX_VALUE)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel1)
                             .addComponent(meetingText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addGap(18, 18, 18)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(dateChooserCombo1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel2))
+                            .addComponent(jLabel2)
+                            .addComponent(dateChooserCombo1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addGap(18, 18, 18)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel3)
-                            .addComponent(timeText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(15, 15, 15)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel3, javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(timeText, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(editButton)
                             .addComponent(deleteButton))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(viewReportButton))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(18, 18, 18)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(welcomeLabel)
-                            .addComponent(nameLabel)
-                            .addComponent(logoutButton))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 248, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addGap(18, 18, 18)
+                            .addComponent(reportButton)
+                            .addComponent(shareButton))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(viewReportButton))
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 248, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(35, 35, 35)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(addMeetingButton)
                     .addComponent(jButton1))
-                .addContainerGap(67, Short.MAX_VALUE))
+                .addContainerGap())
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -305,7 +325,7 @@ public class GUIManagerClient extends javax.swing.JFrame {
                 Logger.getLogger(GUIManagerClient.class.getName()).log(Level.SEVERE, null, ex);
             }
             Meeting meeting = new Meeting();
-            meeting.setId(Integer.parseInt(GUIManagerClient.jTable1.getValueAt(GUIManagerClient.jTable1.getSelectedRow(), 0).toString()));
+            meeting.setId(Integer.parseInt(GUIManagerClient.jTable1.getValueAt(GUIManagerClient.jTable1.getSelectedRow(), 0).toString().substring(3)));
             meeting.setTitle(title);
             meeting.setDate(sqlDate);
             meeting.setTimeStart(timeValue);
@@ -363,21 +383,29 @@ public class GUIManagerClient extends javax.swing.JFrame {
     }//GEN-LAST:event_deleteButtonActionPerformed
 
     private void viewReportButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_viewReportButtonActionPerformed
-        if (GUIManagerClient.jTable1.getSelectedRow() == -1){
+        int row = GUIManagerClient.jTable1.getSelectedRow();
+        if (row == -1){
             JOptionPane.showMessageDialog(rootPane, "Choose a meeting first!");
-            return;
         } else {
-            int row = GUIManagerClient.jTable1.getSelectedRow();
-            int meetingId = Integer.parseInt(GUIManagerClient.jTable1.getValueAt(row,0).toString().substring(3));
-            List<Report> reports = reportController.getReports(meetingId);
-            if(reports.isEmpty()){
-                JOptionPane.showMessageDialog(rootPane, "Haven't have report yet! Generate report first!");
-                return;
+            int meetingId = Integer.parseInt(GUIManagerClient.jTable1.getValueAt(row, 0).toString().substring(3));
+            Meeting meeting = meetingController.getMeeting(meetingId);
+            if (meeting.getUserCreateId() == GUIManagerClient.user.getId()){
+                List<Report> reports = reportController.getReports(meetingId);
+                if(reports.isEmpty()){
+                    JOptionPane.showMessageDialog(rootPane, "Haven't have report yet! Generate report first!");
+                    return;
+                }
+                GUIViewReport.meeting = meetingController.getMeeting(meetingId);
+                GUIViewReport.user= GUIManagerClient.user;
+                GUIViewReport viewReport = new GUIViewReport();
+                viewReport.setVisible(true);
             }
-            GUIViewReport.meeting = meetingController.getMeeting(meetingId);
-            GUIViewReport.user= GUIManagerClient.user;
-            GUIViewReport viewReport = new GUIViewReport();
-            viewReport.setVisible(true);
+            else {
+                int creatorId = meetingController.getMeetingCreatorId(meeting);
+                User creator = userController.getUser(creatorId);
+                JOptionPane.showMessageDialog(rootPane, "You don't have permission to view report of this Meeting!\n"
+                        + "Contact "+ creator.getUsername()+" to have the permission!");
+            }
         }
     }//GEN-LAST:event_viewReportButtonActionPerformed
 
@@ -387,6 +415,18 @@ public class GUIManagerClient extends javax.swing.JFrame {
         List<Meeting> list = meetingController.getMeetings();
         GUIManagerClient.updateTable(list);
     }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void reportButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_reportButtonActionPerformed
+        int row = GUIManagerClient.jTable1.getSelectedRow();
+        if(row == -1){
+            JOptionPane.showMessageDialog(rootPane, "Choose a meeting first!");
+            return;
+        }
+        int meetingId = Integer.parseInt(GUIManagerClient.jTable1.getValueAt(row, 0).toString().substring(3));
+        GUIReporter.meeting = this.meetingController.getMeeting(meetingId);
+        GUIReporter guiReporter = new GUIReporter();
+        guiReporter.setVisible(true);
+    }//GEN-LAST:event_reportButtonActionPerformed
 
     /**
      * @param args the command line arguments
@@ -434,6 +474,8 @@ public class GUIManagerClient extends javax.swing.JFrame {
     private javax.swing.JButton logoutButton;
     private javax.swing.JTextField meetingText;
     private javax.swing.JLabel nameLabel;
+    private javax.swing.JButton reportButton;
+    private javax.swing.JButton shareButton;
     private javax.swing.JTextField timeText;
     private javax.swing.JButton viewReportButton;
     private javax.swing.JLabel welcomeLabel;

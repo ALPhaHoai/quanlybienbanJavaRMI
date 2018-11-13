@@ -6,6 +6,7 @@
 package quanlybienbanclientView;
 
 import entity.User;
+import helpfile.EncryptPassword;
 import java.rmi.RemoteException;
 import javax.swing.JOptionPane;
 import quanlybienbanclientController.UserController;
@@ -145,7 +146,9 @@ public class LoginForm extends javax.swing.JFrame {
         }
         else
         {
-            user = userController.getUser(username.getText(), password.getText());
+            String passwd = password.getText();
+            String encryptedPasswd = EncryptPassword.getMD5(passwd);
+            user = userController.getUser(username.getText(), encryptedPasswd);
             if(user == null){
                 JOptionPane.showMessageDialog(rootPane, "Server is not available!");
             }

@@ -24,8 +24,10 @@ import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 import quanlybienbanclientController.MeetingController;
+import quanlybienbanclientController.PermissionController;
 import quanlybienbanclientController.ReportController;
 import quanlybienbanclientController.ReportPartController;
+import quanlybienbanclientController.UserController;
 import registry.Register;
 import remoteInterface.RemoteInterface;
 
@@ -34,6 +36,8 @@ import remoteInterface.RemoteInterface;
  * @author thanhdovan
  */
 public class GUIStaffClient extends javax.swing.JFrame {
+    private final UserController userController;
+    private final PermissionController permissionController;
     private final MeetingController meetingController;
     private final ReportPartController reportPartController;
     private final ReportController reportController;
@@ -72,11 +76,13 @@ public class GUIStaffClient extends javax.swing.JFrame {
      * Creates new form GUIStaffClient
      */
     public GUIStaffClient() {
+        userController = new UserController();
+        permissionController = new PermissionController();
         meetingController = new MeetingController();
         reportPartController = new ReportPartController();
         reportController = new ReportController();
         initComponents();
-        this.nameLabel.setText(this.user.getUsername());
+        this.nameLabel.setText(GUIStaffClient.user.getUsername());
         List<Meeting> list = meetingController.getMeetings();
         GUIStaffClient.updateMeetingTable(list);
         GUIStaffClient.meetingTable.setAutoCreateRowSorter(true);
@@ -318,8 +324,9 @@ public class GUIStaffClient extends javax.swing.JFrame {
                             .addComponent(jScrollPane3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                             .addComponent(deleteUploadButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addGap(0, 0, Short.MAX_VALUE)
                                 .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 91, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                                 .addComponent(meetingIdTF, javax.swing.GroupLayout.PREFERRED_SIZE, 248, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addGroup(jPanel1Layout.createSequentialGroup()
                                 .addComponent(jLabel5)
@@ -446,37 +453,48 @@ public class GUIStaffClient extends javax.swing.JFrame {
             return;
         }
         int row = GUIStaffClient.meetingTable.getSelectedRow();
-        if("".equals(this.fileNameTextField.getText())){
-            JOptionPane.showMessageDialog(rootPane, "Please choose a file first!");
-            return;
+        int meetingId = Integer.parseInt(GUIStaffClient.meetingTable.getValueAt(row, 0).toString().substring(3));
+        Meeting meeting = meetingController.getMeeting(meetingId);
+        String permission = permissionController.getPermission(GUIStaffClient.user, meeting);
+        if ("u".equals(permission)){
+            if("".equals(this.fileNameTextField.getText())){
+                JOptionPane.showMessageDialog(rootPane, "Please choose a file first!");
+                return;
+            }
+            if(JOptionPane.showConfirmDialog(rootPane, "Are you sure?","",JOptionPane.YES_NO_OPTION) == 0){
+                ReportPart reportPart = new ReportPart();
+                reportPart.setMeetingId(Integer.parseInt(this.meetingIdTF.getText().substring(3)));
+                if(this.jRadioButton1.isSelected()){
+                    reportPart.setType(PERSONCONTENT);
+                }
+                else
+                {
+                    reportPart.setType(CONTENTTIME);
+                }
+                reportPart.setFileName(selectedFile.getName());
+                reportPart.setContent(selectedFile);
+                int i = reportPartController.uploadFile(reportPart);
+                if( i > 0 ){
+                    JOptionPane.showMessageDialog(rootPane, "Success!");
+                    this.jTextArea1.setText("");
+                    this.fileNameTextField.setText("");
+                }
+                else
+                    JOptionPane.showMessageDialog(rootPane, "Failed! Try again!");
+            }
+
+            List<ReportPart> listReportPartPC = reportPartController.getReportPartIds(0, Integer.parseInt(GUIStaffClient.meetingTable.getValueAt(row, 0).toString().substring(3)));
+            List<ReportPart> listReportPartCT = reportPartController.getReportPartIds(1, Integer.parseInt(GUIStaffClient.meetingTable.getValueAt(row, 0).toString().substring(3)));
+            List<ReportPart> listAllReportPart = new ArrayList<>(listReportPartPC);
+            listAllReportPart.addAll(listReportPartCT);
+            GUIStaffClient.updateReportPartTable(listAllReportPart);
         }
-        if(JOptionPane.showConfirmDialog(rootPane, "Are you sure?","",JOptionPane.YES_NO_OPTION) == 0){
-            ReportPart reportPart = new ReportPart();
-            reportPart.setMeetingId(Integer.parseInt(this.meetingIdTF.getText().substring(3)));
-            if(this.jRadioButton1.isSelected()){
-                reportPart.setType(PERSONCONTENT);
-            }
-            else
-            {
-                reportPart.setType(CONTENTTIME);
-            }
-            reportPart.setFileName(selectedFile.getName());
-            reportPart.setContent(selectedFile);
-            int i = reportPartController.uploadFile(reportPart);
-            if( i > 0 ){
-                JOptionPane.showMessageDialog(rootPane, "Success!");
-                this.jTextArea1.setText("");
-                this.fileNameTextField.setText("");
-            }
-            else
-                JOptionPane.showMessageDialog(rootPane, "Failed! Try again!");
+        else {
+            int creatorId = meetingController.getMeetingCreatorId(meeting);
+            User x = userController.getUser(creatorId);
+            JOptionPane.showMessageDialog(rootPane, "You don't have permission to upload!\n"
+                    + "Contact to " + x.getUsername() + " to have permission!");
         }
-        
-        List<ReportPart> listReportPartPC = reportPartController.getReportPartIds(0, Integer.parseInt(GUIStaffClient.meetingTable.getValueAt(row, 0).toString().substring(3)));
-        List<ReportPart> listReportPartCT = reportPartController.getReportPartIds(1, Integer.parseInt(GUIStaffClient.meetingTable.getValueAt(row, 0).toString().substring(3)));
-        List<ReportPart> listAllReportPart = new ArrayList<>(listReportPartPC);
-        listAllReportPart.addAll(listReportPartCT);
-        GUIStaffClient.updateReportPartTable(listAllReportPart);
     }//GEN-LAST:event_uploadButtonActionPerformed
 
     private void jRadioButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jRadioButton2ActionPerformed
@@ -503,26 +521,35 @@ public class GUIStaffClient extends javax.swing.JFrame {
     }//GEN-LAST:event_logoutButtonActionPerformed
 
     private void generateReportButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_generateReportButtonActionPerformed
-        
-        if (GUIStaffClient.meetingTable.getSelectedRow() == -1){
+        int row = GUIStaffClient.meetingTable.getSelectedRow();
+        if (row == -1){
             JOptionPane.showMessageDialog(rootPane, "Choose a meeting first!");
-            return;
         }
         else{
-            
-            GenerateReport.meeting = meetingController.getMeeting(Integer.parseInt(this.meetingIdTF.getText().substring(3)));
-            List<ReportPart> reportPartPersonContents = reportPartController.getReportPartIds(0, meetingController.getMeeting(Integer.parseInt(this.meetingIdTF.getText().substring(3))).getId());
-            List<ReportPart> reportPartContentTimes = reportPartController.getReportPartIds(1, meetingController.getMeeting(Integer.parseInt(this.meetingIdTF.getText().substring(3))).getId());
-            if(reportPartPersonContents.isEmpty()){
-                JOptionPane.showMessageDialog(rootPane, "Haven't have PersonContent file yet! Upload file first!");
-                return;
+            int meetingId = Integer.parseInt(GUIStaffClient.meetingTable.getValueAt(row, 0).toString().substring(3));
+            Meeting meeting = meetingController.getMeeting(meetingId);
+            String permission = permissionController.getPermission(GUIStaffClient.user, meeting);
+            if ("u".equals(permission)){
+                GenerateReport.meeting = meetingController.getMeeting(Integer.parseInt(this.meetingIdTF.getText().substring(3)));
+                List<ReportPart> reportPartPersonContents = reportPartController.getReportPartIds(0, meetingController.getMeeting(Integer.parseInt(this.meetingIdTF.getText().substring(3))).getId());
+                List<ReportPart> reportPartContentTimes = reportPartController.getReportPartIds(1, meetingController.getMeeting(Integer.parseInt(this.meetingIdTF.getText().substring(3))).getId());
+                if(reportPartPersonContents.isEmpty()){
+                    JOptionPane.showMessageDialog(rootPane, "Haven't have PersonContent file yet! Upload file first!");
+                    return;
+                }
+                if(reportPartContentTimes.isEmpty()){
+                    JOptionPane.showMessageDialog(rootPane, "Haven't have ContentTime file yet! Upload file first!");
+                    return;
+                }
+                GenerateReport generateReport = new GenerateReport();
+                generateReport.setVisible(true);
             }
-            if(reportPartContentTimes.isEmpty()){
-                JOptionPane.showMessageDialog(rootPane, "Haven't have ContentTime file yet! Upload file first!");
-                return;
+            else {
+                int creatorId = meetingController.getMeetingCreatorId(meeting);
+                User x = userController.getUser(creatorId);
+                JOptionPane.showMessageDialog(rootPane, "You don't have permission to upload!\n"
+                    + "Contact to " + x.getUsername() + " to have permission!");
             }
-            GenerateReport generateReport = new GenerateReport();
-            generateReport.setVisible(true);
         }
     }//GEN-LAST:event_generateReportButtonActionPerformed
 
@@ -537,7 +564,6 @@ public class GUIStaffClient extends javax.swing.JFrame {
         int row = GUIStaffClient.reportPartTable.getSelectedRow();
         if(row == -1){
             JOptionPane.showMessageDialog(rootPane, "Choose a report part file first!");
-            return;
         }
         else{
             if(JOptionPane.showConfirmDialog(rootPane, "Are you sure?", "", JOptionPane.YES_NO_OPTION)==0){
@@ -555,7 +581,6 @@ public class GUIStaffClient extends javax.swing.JFrame {
     private void viewReportButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_viewReportButtonActionPerformed
         if (GUIStaffClient.meetingTable.getSelectedRow() == -1){
             JOptionPane.showMessageDialog(rootPane, "Choose a meeting first!");
-            return;
         }
         else {
             
@@ -603,15 +628,11 @@ public class GUIStaffClient extends javax.swing.JFrame {
                     break;
                 }
             }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(GUIStaffClient.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(GUIStaffClient.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(GUIStaffClient.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
             java.util.logging.Logger.getLogger(GUIStaffClient.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
+        //</editor-fold>
+        
         //</editor-fold>
 
         /* Create and display the form */

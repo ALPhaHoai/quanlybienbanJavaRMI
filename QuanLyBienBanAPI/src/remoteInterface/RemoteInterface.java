@@ -38,8 +38,11 @@ public interface RemoteInterface extends Remote{
     public int addMeeting(Meeting meeting) throws RemoteException;
     public int editMeeting(Meeting meeting) throws RemoteException;
     public int deleteMeeting(Meeting meeting) throws RemoteException;
-    
-    // end interface for Meeting
+    public int addReporter(User user, Meeting meeting) throws RemoteException;
+    public List<Integer> getReporterIds(int meetingId) throws RemoteException;
+    public int deleteReporter(User user, Meeting meeting) throws RemoteException;
+    public int getMeetingCreatorId(Meeting meeting) throws RemoteException;
+// end interface for Meeting
     
     //interface for report
     public int generateReport(Report report, Meeting meeting) throws RemoteException;
@@ -60,4 +63,11 @@ public interface RemoteInterface extends Remote{
     public List<Integer> getIdOfUserEdit(int reportId) throws RemoteException;
     public int getPeopleEdit(PeopleEditReport per) throws RemoteException;
     public int removePeopleEdit(int peopleEditId) throws RemoteException;
+    
+    
+    // permission remote interface
+    public String getPermission(User user, Meeting meeting) throws RemoteException;
+    public int addPermission(User user, Meeting meeting, String permission) throws RemoteException;
+    
+    // end permission remote interface
 }

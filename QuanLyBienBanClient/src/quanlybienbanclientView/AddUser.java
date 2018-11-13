@@ -6,6 +6,7 @@
 package quanlybienbanclientView;
 
 import entity.User;
+import helpfile.EncryptPassword;
 import java.util.List;
 import javax.swing.JOptionPane;
 import quanlybienbanclientController.UserController;
@@ -176,9 +177,10 @@ public class AddUser extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(rootPane, "These fields are required");
             return;
         }
+        String encryptPasswd = EncryptPassword.getMD5(spassword);
         User user = new User();
         user.setUsername(susername);
-        user.setPassword(spassword);
+        user.setPassword(encryptPasswd);
         user.setPosition(sposition);
         user.setFullname(sfullname);
         int i = userController.addUser(user);
