@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Nov 10, 2018 at 10:16 PM
+-- Generation Time: Nov 13, 2018 at 02:26 PM
 -- Server version: 5.7.24-0ubuntu0.18.04.1
 -- PHP Version: 7.2.10-0ubuntu0.18.04.1
 
@@ -30,6 +30,7 @@ SET time_zone = "+00:00";
 
 CREATE TABLE `meetings` (
   `id` int(11) NOT NULL,
+  `userCreateId` int(11) NOT NULL,
   `meetingTitle` varchar(50) COLLATE utf8_unicode_ci NOT NULL,
   `meetingDate` date NOT NULL,
   `timeStart` time NOT NULL
@@ -39,11 +40,10 @@ CREATE TABLE `meetings` (
 -- Dumping data for table `meetings`
 --
 
-INSERT INTO `meetings` (`id`, `meetingTitle`, `meetingDate`, `timeStart`) VALUES
-(1, 'Hop ABC', '2018-11-21', '08:00:00'),
-(3, 'Hop CDE', '2018-11-13', '08:00:00'),
-(4, 'Hop ve DEF', '2018-11-14', '07:00:00'),
-(5, 'Hop ve EFG', '2018-11-22', '16:00:00');
+INSERT INTO `meetings` (`id`, `userCreateId`, `meetingTitle`, `meetingDate`, `timeStart`) VALUES
+(1, 2, 'Hop ABC', '2018-11-21', '09:00:00'),
+(3, 2, 'Hop CDE', '2018-11-13', '08:00:00'),
+(4, 2, 'Hop ve DEF', '2018-11-14', '06:00:00');
 
 -- --------------------------------------------------------
 
@@ -98,7 +98,33 @@ CREATE TABLE `reports` (
 --
 
 INSERT INTO `reports` (`id`, `meetingId`, `reportName`, `reportContent`, `timeCreate`) VALUES
-(1, 1, 'MID1Report', 'Bien Ban Cuoc Hop Hop ABC\n\nThanh vien tham gia: \n+ Thanh\n+ Long\n+ Canh\n+ Hoang\n\nNoi dung cuoc hop:\n[ 00:00:05 ~ 00:01:00 ] Hoang - csakclamckdalmcsd\n[ 00:00:59 ~ 00:01:16 ] Canh - csclakmsdaklmmdksmclaksmdcasdl\n[ 00:01:25 ~ 00:01:50 ] Long - ascamdklsclk124123r233rkml\n[ 00:01:30 ~ 00:02:20 ] Thanh - 123dascascsacascsacklsmcalkcdscaml\n', '09:30:52');
+(1, 1, 'MID1Report', 'Bien Ban Cuoc Hop Hop ABC\n\nThanh vien tham gia: \n+ Thanh\n+ Long\n+ Canh\n+ Hoang\n\nNoi dung cuoc hop:\n[ 00:00:05 ~ 00:01:00 ] Hoang - csakclamckdalmcsd\n[ 00:00:59 ~ 00:01:16 ] Canh - csclakmsdaklmmdksmclaksmdcasdl\n[ 00:01:25 ~ 00:01:50 ] Long - ascamdklsclk124123r233rkml\n[ 00:01:30 ~ 00:02:20 ] Thanh - 123dascascsacascsacklsmcalkcdscaml\n', '09:30:52'),
+(2, 1, 'MID1Report', 'Bien Ban Cuoc Hop Hop ABC\n\nThanh vien tham gia: \n+ Thanh\n+ Long\n+ Canh\n+ Hoang\n\nThoi gian bat dau: 08:00:00 AM\n\nNoi dung cuoc hop:\n[ 00:00:05 ~ 00:01:00 ] Hoang - csakclamckdalmcsd\n[ 00:00:59 ~ 00:01:16 ] Canh - csclakmsdaklmmdksmclaksmdcasdl\n[ 00:01:25 ~ 00:01:50 ] Long - ascamdklsclk124123r233rkml\n[ 00:01:30 ~ 00:02:20 ] Thanh - 123dascascsacascsacklsmcalkcdscaml\n', '09:30:52'),
+(3, 1, 'MID1Report', 'Bien Ban Cuoc Hop Hop ABC\n\nThanh vien tham gia: \n+ Thanh\n+ Long\n+ Canh\n+ Hoang\n\nThoi gian bat dau: 08:00:00 AM\nThoi gian ket thuc: 10:00:00AM\n\nNoi dung cuoc hop:\n[ 00:00:05 ~ 00:01:00 ] Hoang - csakclamckdalmcsd\n[ 00:00:59 ~ 00:01:16 ] Canh - csclakmsdaklmmdksmclaksmdcasdl\n[ 00:01:25 ~ 00:01:50 ] Long - ascamdklsclk124123r233rkml\n[ 00:01:30 ~ 00:02:20 ] Thanh - 123dascascsacascsacklsmcalkcdscaml\n', '08:55:30'),
+(4, 1, 'MID1Report', 'Bien Ban Cuoc Hop Hop ABC\n\nThanh vien tham gia: \n+ Thanh\n+ Long\n+ Canh\n+ Hoang\n\nThoi gian bat dau: 08:00:00 AM\n\nNoi dung cuoc hop:\n[ 00:00:05 ~ 00:01:00 ] Hoang - csakclamckdalmcsd\n[ 00:00:59 ~ 00:01:16 ] Canh - csclakmsdaklmmdksmclaksmdcasdl\n[ 00:01:25 ~ 00:01:50 ] Long - ascamdklsclk124123r233rkml\n[ 00:01:30 ~ 00:02:20 ] Thanh - 123dascascsacascsacklsmcalkcdscaml\n', '20:57:36'),
+(5, 1, 'MID1Report', 'Bien Ban Cuoc Hop Hop ABC\n\nThanh vien tham gia: \n+ Thanh\n+ Long\n+ Canh\n+ Hoang\n\nThoi gian bat dau: 08:00:00 AM\nThoi gian ket thuc: 10:00\n\nNoi dung cuoc hop:\n[ 00:00:05 ~ 00:01:00 ] Hoang - csakclamckdalmcsd\n[ 00:00:59 ~ 00:01:16 ] Canh - csclakmsdaklmmdksmclaksmdcasdl\n[ 00:01:25 ~ 00:01:50 ] Long - ascamdklsclk124123r233rkml\n[ 00:01:30 ~ 00:02:20 ] Thanh - 123dascascsacascsacklsmcalkcdscaml\n', '22:05:19');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `userpermission`
+--
+
+CREATE TABLE `userpermission` (
+  `id` int(11) NOT NULL,
+  `userId` int(11) NOT NULL,
+  `meetingId` int(11) NOT NULL,
+  `permission` varchar(11) COLLATE utf8_unicode_ci NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+--
+-- Dumping data for table `userpermission`
+--
+
+INSERT INTO `userpermission` (`id`, `userId`, `meetingId`, `permission`) VALUES
+(13, 1, 1, 'u'),
+(14, 4, 3, 'u'),
+(15, 4, 4, 'u');
 
 -- --------------------------------------------------------
 
@@ -109,7 +135,7 @@ INSERT INTO `reports` (`id`, `meetingId`, `reportName`, `reportContent`, `timeCr
 CREATE TABLE `users` (
   `id` int(11) NOT NULL,
   `username` varchar(20) COLLATE utf8_unicode_ci NOT NULL,
-  `password` varchar(20) COLLATE utf8_unicode_ci NOT NULL,
+  `password` varchar(50) COLLATE utf8_unicode_ci NOT NULL,
   `fullname` varchar(20) COLLATE utf8_unicode_ci NOT NULL,
   `position` varchar(30) COLLATE utf8_unicode_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
@@ -119,11 +145,12 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `username`, `password`, `fullname`, `position`) VALUES
-(1, 'thanhdovan', '1234', 'thanh', 'staff'),
-(2, 'canhnguyenduc', '1234', 'canh', 'manager'),
-(4, 'longlengoc', '1234', 'long', 'staff'),
-(6, 'hoangtrongnguyen', '1234', 'hoang', 'staff'),
-(7, 'tungvuduc', '1234', 'tung', 'admin');
+(1, 'thanhdovan', '81dc9bdb52d04dc20036dbd8313ed055', 'thanh', 'staff'),
+(2, 'canhnguyenduc', '81dc9bdb52d04dc20036dbd8313ed055', 'canh', 'manager'),
+(4, 'longlengoc', '81dc9bdb52d04dc20036dbd8313ed055', 'long', 'staff'),
+(6, 'hoangtrongnguyen', '81dc9bdb52d04dc20036dbd8313ed055', 'hoang', 'manager'),
+(7, 'tungvuduc', '81dc9bdb52d04dc20036dbd8313ed055', 'tung', 'admin'),
+(8, 'manager', 'ec6a6536ca304edf844d1d248a4f08dc', 'Ma na ger', 'manager');
 
 --
 -- Indexes for dumped tables
@@ -133,7 +160,8 @@ INSERT INTO `users` (`id`, `username`, `password`, `fullname`, `position`) VALUE
 -- Indexes for table `meetings`
 --
 ALTER TABLE `meetings`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_user_create_id` (`userCreateId`);
 
 --
 -- Indexes for table `peopleeditreport`
@@ -158,6 +186,12 @@ ALTER TABLE `reports`
   ADD KEY `fk_meeting_id` (`meetingId`);
 
 --
+-- Indexes for table `userpermission`
+--
+ALTER TABLE `userpermission`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `users`
 --
 ALTER TABLE `users`
@@ -171,35 +205,47 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `meetings`
 --
 ALTER TABLE `meetings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `peopleeditreport`
 --
 ALTER TABLE `peopleeditreport`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `reportparts`
 --
 ALTER TABLE `reportparts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `reports`
 --
 ALTER TABLE `reports`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT for table `userpermission`
+--
+ALTER TABLE `userpermission`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- Constraints for dumped tables
 --
+
+--
+-- Constraints for table `meetings`
+--
+ALTER TABLE `meetings`
+  ADD CONSTRAINT `fk_user_create_id` FOREIGN KEY (`userCreateId`) REFERENCES `users` (`id`);
 
 --
 -- Constraints for table `peopleeditreport`
