@@ -21,7 +21,12 @@ import entity.User;
 public interface RemoteInterface extends Remote{
     // server
     public void clientLogoutMessage(User user) throws RemoteException;
+    public void addRemoteClientInterface(TestRemoteClientInterface rci) throws RemoteException;
+    public void removeRemoteClientInterface(TestRemoteClientInterface b) throws RemoteException;
+    public String printMsg(String msg) throws RemoteException;
     
+    public void addRemoteManagerInterface(RemoteManagerInterface rm) throws RemoteException;
+    public void updateMeetingTable(List<Meeting> list) throws RemoteException;
     // interface for user
     public List<User> getUsers() throws RemoteException;
     public User getUser(String username, String password) throws RemoteException;

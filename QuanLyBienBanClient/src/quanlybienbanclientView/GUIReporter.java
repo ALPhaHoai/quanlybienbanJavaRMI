@@ -285,7 +285,7 @@ public class GUIReporter extends javax.swing.JFrame {
             }
         }
     }//GEN-LAST:event_addReporterButtonActionPerformed
-
+    
     /**
      * @param args the command line arguments
      */

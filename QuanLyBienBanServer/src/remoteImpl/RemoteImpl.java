@@ -24,6 +24,7 @@ import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.rmi.server.UnicastRemoteObject;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.Time;
@@ -33,26 +34,64 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.GregorianCalendar;
+import java.util.Vector;
 import mainServer.GUIServer;
 import remoteInterface.ConnectDB;
 import remoteInterface.RemoteInterface;
+import remoteInterface.RemoteManagerInterface;
+import remoteInterface.TestRemoteClientInterface;
 
 /**
  *
  * @author thanhdovan
  */
-public class RemoteImpl implements RemoteInterface {    
-    
+public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {    
+    private Vector testClients;
+    private Vector managerClients;
+    public RemoteImpl() throws RemoteException{
+        super();
+        managerClients = new Vector();
+    }
+//Remote for callback
+    @Override
+    public synchronized void addRemoteClientInterface(TestRemoteClientInterface rci) throws RemoteException{
+        testClients.addElement(rci);
+    }
+    @Override
+    public synchronized void removeRemoteClientInterface(TestRemoteClientInterface b) throws RemoteException{
+        testClients.removeElement(b);
+    }
+    @Override
+    public String printMsg(String msg) throws RemoteException{
+        for (int i = 0; i < testClients.size() ; i++){
+            TestRemoteClientInterface rci = (TestRemoteClientInterface)testClients.elementAt(i);
+            rci.printmsg(msg);
+        }
+        return msg;
+    }
+    @Override
+    public synchronized void addRemoteManagerInterface(RemoteManagerInterface rm) throws RemoteException{
+        managerClients.addElement(rm);
+    }
+    @Override
+    public void updateMeetingTable(List<Meeting> list) throws RemoteException{
+        for (int i = 0; i < managerClients.size() ; i++){
+            RemoteManagerInterface rm = (RemoteManagerInterface)managerClients.elementAt(i);
+            rm.updateMeetingTable(list);
+        }
+    }
+// end for callback
+
 // Remote Implement for user
     @Override
     public List<User> getUsers() throws RemoteException {
         GUIServer.jTextArea1.append("Load user list . . .\n");
         List<User> users = new ArrayList<>();
-        Connection conn = ConnectDB.connectDB();
         Statement stmt;
         String sql = "select * from users";
         ResultSet rs;
         try {
+            Connection conn = ConnectDB.connectDB();
             stmt = conn.createStatement();
             rs = stmt.executeQuery(sql);
             while(rs.next()) {
@@ -71,10 +110,11 @@ public class RemoteImpl implements RemoteInterface {
                 user.setFullname(fullname);
                 user.setPosition(position);
                 users.add(user);
-        }
-        rs.close();
-        GUIServer.jTextArea1.append("Load user list done! \n");
-        return users;
+            }
+            rs.close();
+            conn.close();
+            GUIServer.jTextArea1.append("Load user list done! \n");
+            return users;
         } catch (SQLException ex) {
             Logger.getLogger(RemoteImpl.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -83,10 +123,10 @@ public class RemoteImpl implements RemoteInterface {
     @Override
     public User getUser(String username, String password) throws RemoteException {
         User user = new User();
-        Connection conn = ConnectDB.connectDB();
         System.out.println("Creating statement...");        
         String sql = "select * from users where username = ? and password = ?";
         try {
+            Connection conn = ConnectDB.connectDB();
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setString(1, username);
             stmt.setString(2, password);
@@ -105,7 +145,8 @@ public class RemoteImpl implements RemoteInterface {
                 System.out.println(GUIServer.jTextArea1.getText());
                 user.setFullname(fullname);
                 user.setPosition(position);
-                
+                rs.close();
+                conn.close();
                 return user;
             }
         } catch (SQLException ex) {
@@ -122,14 +163,15 @@ public class RemoteImpl implements RemoteInterface {
                 + "password:"+ user.getPassword() + "\n"
                 + "fullname:"+ user.getFullname()+"\n "
                 + "position:"+ user.getPosition()+"\n. . .");
-        Connection conn = ConnectDB.connectDB();
         System.out.println("Creating statement...");
         String sql = "INSERT INTO users (username, password, fullname, position) VALUES "
                 +"('"+ user.getUsername() +"' ,'"+user.getPassword() + "', '"+ user.getFullname()+"', '"+user.getPosition()+"');";
         try {
+            Connection conn = ConnectDB.connectDB();
             Statement stmt = conn.createStatement();
             int i = stmt.executeUpdate(sql);
             GUIServer.jTextArea1.append("Adding done!\n");
+            conn.close();
             return i;
         } catch (SQLException ex) {
             Logger.getLogger(RemoteImpl.class.getName()).log(Level.SEVERE, null, ex);
@@ -139,10 +181,10 @@ public class RemoteImpl implements RemoteInterface {
     @Override
     public User getUser(int id) throws RemoteException {
         User user = new User();
-        Connection conn = ConnectDB.connectDB();
         System.out.println("Creating statement...");        
         String sql = "select * from users where id = ?";
         try {
+            Connection conn = ConnectDB.connectDB();
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setInt(1, id);
             ResultSet rs = stmt.executeQuery();
@@ -158,7 +200,8 @@ public class RemoteImpl implements RemoteInterface {
                 user.setPassword(password);
                 user.setFullname(fullname);
                 user.setPosition(position);
-                
+                rs.close();
+                conn.close();
                 return user;
             }
         } catch (SQLException ex) {
@@ -168,10 +211,10 @@ public class RemoteImpl implements RemoteInterface {
     }
     @Override
     public int editUser(User user) throws RemoteException {
-        Connection conn = ConnectDB.connectDB();
         System.out.println("Creating statement...");
         String sql = "update users set username = ?, password = ?, fullname = ?, position = ? where id = ?;";
         try {
+            Connection conn = ConnectDB.connectDB();
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setString(1, user.getUsername());
             stmt.setString(2, user.getPassword());
@@ -181,6 +224,7 @@ public class RemoteImpl implements RemoteInterface {
             System.out.println(stmt);
             int i = stmt.executeUpdate();
             GUIServer.jTextArea1.append("Edited user " +user.getUsername()+ "!\n");
+            conn.close();
             return i;
         } catch (SQLException ex) {
             Logger.getLogger(RemoteImpl.class.getName()).log(Level.SEVERE, null, ex);
@@ -189,15 +233,16 @@ public class RemoteImpl implements RemoteInterface {
     }
     @Override
     public int deleteUser(User user) throws RemoteException {
-        Connection conn = ConnectDB.connectDB();
         System.out.println("Creating statement...");
         String sql = "DELETE FROM users WHERE users.id = ?;";
         try {
+            Connection conn = ConnectDB.connectDB();
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setInt(1, user.getId());
             System.out.println(stmt);
             int i = stmt.executeUpdate();
             GUIServer.jTextArea1.append("Deleted user "+ user.getUsername() +"!\n");
+            conn.close();
             return i;
         } catch (SQLException ex) {
             Logger.getLogger(RemoteImpl.class.getName()).log(Level.SEVERE, null, ex);
@@ -211,12 +256,12 @@ public class RemoteImpl implements RemoteInterface {
     public List<Meeting> getMeetings() throws RemoteException {
         GUIServer.jTextArea1.append("Load meeting list . . .\n");
         List<Meeting> list = new ArrayList<>();
-        Connection conn = ConnectDB.connectDB();
         Statement stmt;
         System.out.println("Creating statement...");
         String sql = "select * from meetings";
         ResultSet rs;
         try {
+            Connection conn = ConnectDB.connectDB();
             stmt = conn.createStatement();
             rs = stmt.executeQuery(sql);
             while(rs.next()) {
@@ -234,8 +279,9 @@ public class RemoteImpl implements RemoteInterface {
                 meeting.setDate(date);
                 meeting.setTimeStart(timeValue);
                 list.add(meeting);
-        }
+            }
         rs.close();
+        conn.close();
         GUIServer.jTextArea1.append("Load meeting list done! \n");
         return list;
         } catch (SQLException ex) {
@@ -247,31 +293,37 @@ public class RemoteImpl implements RemoteInterface {
     }
     @Override
     public int addMeeting(Meeting meeting) throws RemoteException {
-        Connection conn = ConnectDB.connectDB();
+        
         GUIServer.jTextArea1.append("Adding new meeting:"
                 + "title: " + meeting.getTitle() + "\n"
                 + "date: " + meeting.getDate() + "\n"
                 + "time: " + meeting.getTimeStart() + "\n. . .");
-        String sql = "INSERT INTO meetings (meetingTitle, meetingDate, timeStart) VALUES ( ?, ?, ?);";
+        String sql = "INSERT INTO meetings (meetingTitle, meetingDate, timeStart, userCreateId) VALUES (?, ?, ?, ?);";
         System.out.println(sql);
         try {
+            Connection conn = ConnectDB.connectDB();
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setString(1, meeting.getTitle());
             stmt.setDate(2, meeting.getDate());
             stmt.setString(3, meeting.getTimeStart().toString());
-            int i = stmt.executeUpdate();
+            stmt.setInt(4, meeting.getUserCreateId());
+            System.out.println(stmt);
+            int o = stmt.executeUpdate();
             GUIServer.jTextArea1.append("Adding done! \n");
-            return i;
+            conn.close();
+            return o;
         } catch (SQLException ex) {
             Logger.getLogger(RemoteImpl.class.getName()).log(Level.SEVERE, null, ex);
         }
+        
         return 0;
     }
     @Override
     public int editMeeting(Meeting meeting) throws RemoteException {
-        Connection conn = ConnectDB.connectDB();
+        
         String sql = "update meetings set meetingTitle = ?, meetingDate = ?, timeStart = ? where id = ?;";
         try {
+            Connection conn = ConnectDB.connectDB();
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setString(1, meeting.getTitle());
             stmt.setDate(2, meeting.getDate());
@@ -279,6 +331,7 @@ public class RemoteImpl implements RemoteInterface {
             stmt.setInt(4, meeting.getId());
             int i = stmt.executeUpdate();
             GUIServer.jTextArea1.append("Editted meeting "+ meeting.getTitle() +"! \n");
+            conn.close();
             return i;
         } catch (SQLException ex) {
             Logger.getLogger(RemoteImpl.class.getName()).log(Level.SEVERE, null, ex);
@@ -288,10 +341,10 @@ public class RemoteImpl implements RemoteInterface {
     @Override
     public Meeting getMeeting(int meetingId) throws RemoteException {
         Meeting meeting = new Meeting();
-        Connection conn = ConnectDB.connectDB();
         System.out.println("Creating statement...");        
         String sql = "select * from meetings where id = ?";
         try {
+            Connection conn = ConnectDB.connectDB();
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setInt(1, meetingId);
             ResultSet rs = stmt.executeQuery();
@@ -311,7 +364,7 @@ public class RemoteImpl implements RemoteInterface {
                 meeting.setDate(date);
                 meeting.setTimeStart(timeValue);
                 
-                
+                conn.close();
                 return meeting;
             }
         } catch (SQLException ex) {
@@ -323,13 +376,15 @@ public class RemoteImpl implements RemoteInterface {
     }
     @Override
     public int deleteMeeting(Meeting meeting) throws RemoteException {
-        Connection conn = ConnectDB.connectDB();
+        
         String sql = "DELETE FROM meetings WHERE meetings.id = ?;";
         try {
+            Connection conn = ConnectDB.connectDB();
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setInt(1, meeting.getId());
             int i = stmt.executeUpdate();
             GUIServer.jTextArea1.append("Deleted meeting "+ meeting.getTitle() +"! \n");
+            conn.close();
             return i;
         } catch (SQLException ex) {
             Logger.getLogger(RemoteImpl.class.getName()).log(Level.SEVERE, null, ex);
@@ -338,13 +393,14 @@ public class RemoteImpl implements RemoteInterface {
     }  
     @Override
     public int addReporter(User user, Meeting meeting) throws RemoteException{
-        Connection conn = ConnectDB.connectDB();
         String sql = "INSERT INTO userpermission (userId, meetingId, permission) VALUES ( ?, ?, 'u');";
         try {
+            Connection conn = ConnectDB.connectDB();
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setInt(1, user.getId());
             stmt.setInt(2, meeting.getId());
             int i = stmt.executeUpdate();
+            conn.close();
             return i;
         } catch (SQLException ex) {
             Logger.getLogger(RemoteImpl.class.getName()).log(Level.SEVERE, null, ex);
@@ -354,11 +410,11 @@ public class RemoteImpl implements RemoteInterface {
     @Override
     public List<Integer> getReporterIds(int meetingId) throws RemoteException{
         List<Integer> list = new ArrayList<>();
-        Connection conn = ConnectDB.connectDB();
         String sql = "select * from userpermission where meetingId = ? and permission = ?";
         PreparedStatement stmt;
         ResultSet rs;
         try {
+            Connection conn = ConnectDB.connectDB();
             stmt = conn.prepareStatement(sql);
             stmt.setInt(1, meetingId);
             stmt.setString(2, "u");
@@ -369,6 +425,7 @@ public class RemoteImpl implements RemoteInterface {
                 list.add(id);
         }
         rs.close();
+        conn.close();
         return list;
         } catch (SQLException ex) {
             Logger.getLogger(RemoteImpl.class.getName()).log(Level.SEVERE, null, ex);
@@ -377,13 +434,15 @@ public class RemoteImpl implements RemoteInterface {
     }
     @Override
     public int deleteReporter(User user, Meeting meeting) throws RemoteException{
-        Connection conn = ConnectDB.connectDB();
+        
         String sql = "DELETE FROM userpermission WHERE userId = ? and meetingId = ? and permission = 'u';";
         try {
+            Connection conn = ConnectDB.connectDB();
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setInt(1, user.getId());
             stmt.setInt(2, meeting.getId());
             int i = stmt.executeUpdate();
+            conn.close();
             return i;
         } catch (SQLException ex) {
             Logger.getLogger(RemoteImpl.class.getName()).log(Level.SEVERE, null, ex);
@@ -392,17 +451,20 @@ public class RemoteImpl implements RemoteInterface {
     }
     @Override
     public int getMeetingCreatorId(Meeting meeting) throws RemoteException{
-        Connection conn = ConnectDB.connectDB();
+        
         System.out.println("Creating statement...");        
         String sql = "select * from meetings where id = ?";
         try {
+            Connection conn = ConnectDB.connectDB();
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setInt(1, meeting.getId());
             ResultSet rs = stmt.executeQuery();
             if (rs.next()){
                 int creatorId = rs.getInt("userCreateId");
+                conn.close();
                 return creatorId;
             }
+            conn.close();
         } catch (SQLException ex) {
             Logger.getLogger(RemoteImpl.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -420,7 +482,7 @@ public class RemoteImpl implements RemoteInterface {
     // Remote Implement for file
     @Override
     public int uploadFile(ReportPart reportPart) throws RemoteException{
-        Connection conn = ConnectDB.connectDB();
+        
         String content = "";
         //
         BufferedInputStream bufferedStream;
@@ -440,6 +502,7 @@ public class RemoteImpl implements RemoteInterface {
         }
         String sql = "insert into reportparts (meetingId, fileName, type, reportPartContent) values (?, ?, ?, ?);";
         try {
+            Connection conn = ConnectDB.connectDB();
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setInt(1, reportPart.getMeetingId());
             stmt.setString(2, reportPart.getFileName());
@@ -447,6 +510,7 @@ public class RemoteImpl implements RemoteInterface {
             stmt.setString(4, content);
             int i = stmt.executeUpdate();
             GUIServer.jTextArea1.append("Uploaded file to MID"+ reportPart.getMeetingId() +"! \n");
+            conn.close();
             return i;
         } catch (SQLException ex) {
             Logger.getLogger(RemoteImpl.class.getName()).log(Level.SEVERE, null, ex);
@@ -456,12 +520,14 @@ public class RemoteImpl implements RemoteInterface {
     
     @Override
     public int deleteReportPart(int reportPartId) throws RemoteException{
-        Connection conn = ConnectDB.connectDB();
+        
         String sql = "DELETE FROM reportparts WHERE id = ?;";
         try {
+            Connection conn = ConnectDB.connectDB();
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setInt(1, reportPartId);
             int i = stmt.executeUpdate();
+            conn.close();
             return i;
         } catch (SQLException ex) {
             Logger.getLogger(RemoteImpl.class.getName()).log(Level.SEVERE, null, ex);
@@ -473,12 +539,12 @@ public class RemoteImpl implements RemoteInterface {
         final int PERSONCONTENT = 0, CONTENTTIME=1;
         GUIServer.jTextArea1.append("Load reportpart list . . .\n");
         List<ReportPart> list = new ArrayList<>();
-        Connection conn = ConnectDB.connectDB();
         PreparedStatement stmt;
         System.out.println("Creating statement...");
         String sql = "select * from reportparts where type = ? and meetingId = ?";
         ResultSet rs;
         try {
+            Connection conn = ConnectDB.connectDB();
             stmt = conn.prepareStatement(sql);
             stmt.setInt(1, i);
             stmt.setInt(2, y);
@@ -499,6 +565,7 @@ public class RemoteImpl implements RemoteInterface {
                 list.add(reportPart);
         }
         rs.close();
+        conn.close();
         GUIServer.jTextArea1.append("Load reportpart list done! \n");
         return list;
         } catch (SQLException ex) {
@@ -508,19 +575,22 @@ public class RemoteImpl implements RemoteInterface {
     }
     @Override
     public String getReportPartContent(int reportPartId) throws RemoteException{
-        Connection conn = ConnectDB.connectDB();
+        
         PreparedStatement stmt = null;
         String sql = "select * from reportparts where id = ?";
         String out="";
         try {
+            Connection conn = ConnectDB.connectDB();
             stmt = conn.prepareStatement(sql);
             stmt.setInt(1, reportPartId);
             System.out.println(stmt);
             ResultSet rs = stmt.executeQuery();
             if(rs.next()){
                 out = rs.getString("reportPartContent");
+                conn.close();
                 return out;
             }
+            conn.close();
         } catch (SQLException ex) {
             Logger.getLogger(RemoteImpl.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -528,18 +598,21 @@ public class RemoteImpl implements RemoteInterface {
     }
     // end Remote Implement for file
     // Remote implement for report
+    @Override
     public int addReport(Report report) throws RemoteException{
-        Connection conn = ConnectDB.connectDB();
+        
         String sql = "INSERT INTO reports (meetingId, reportName, reportContent, timeCreate) VALUES ( ?, ?, ?, ?);";
         SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
         String str = sdf.format(new java.util.Date());
         try {
+            Connection conn = ConnectDB.connectDB();
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setInt(1, report.getMeetingId());
             stmt.setString(2, report.getReportName());
             stmt.setString(3, report.getReportContent());
             stmt.setString(4, str);
             int i = stmt.executeUpdate();
+            conn.close();
             return i;
         } catch (SQLException ex) {
             Logger.getLogger(RemoteImpl.class.getName()).log(Level.SEVERE, null, ex);
@@ -549,10 +622,10 @@ public class RemoteImpl implements RemoteInterface {
     @Override
     public Report getReport(int reportId) throws RemoteException{
         Report report = new Report();
-        Connection conn = ConnectDB.connectDB();
         PreparedStatement stmt;
         String sql = "select * from reports where id = ?";
         try {
+            Connection conn = ConnectDB.connectDB();
             stmt = conn.prepareStatement(sql);
             stmt.setInt(1, reportId);
             ResultSet rs = stmt.executeQuery();
@@ -567,8 +640,10 @@ public class RemoteImpl implements RemoteInterface {
                 report.setReportName(reportName);
                 report.setReportContent(reportContent);
                 report.setTimeCreate(timeCreate);
+                conn.close();
                 return report;
             }
+            conn.close();
         } catch (SQLException ex) {
             Logger.getLogger(RemoteImpl.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -576,7 +651,6 @@ public class RemoteImpl implements RemoteInterface {
     }
     @Override
     public int generateReport(Report report, Meeting meeting) throws RemoteException {
-        Connection conn = ConnectDB.connectDB();
         String reportContent = "Bien Ban Cuoc Hop "+ meeting.getTitle() + "\n\n";
         reportContent += "Thanh vien tham gia: ";
         for (PersonContentTime pct: report.getPersonContentTimes()){
@@ -596,12 +670,14 @@ public class RemoteImpl implements RemoteInterface {
         
         String sql = "insert into reports (meetingId, reportName, reportContent, timeCreate) values (?, ?, ?, ?);";
         try {
+            Connection conn = ConnectDB.connectDB();
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, report.getMeetingId());
             ps.setString(2, report.getReportName());
             ps.setString(3, reportContent);
             ps.setString(4, timeCreate);
             int i = ps.executeUpdate();
+            conn.close();
             return i;
         } catch (SQLException ex) {
             Logger.getLogger(RemoteImpl.class.getName()).log(Level.SEVERE, null, ex);
@@ -611,11 +687,11 @@ public class RemoteImpl implements RemoteInterface {
     @Override
     public List<Report> getReports(int meetingId) throws RemoteException {
         List<Report> listReport = new ArrayList<>();
-        Connection conn = ConnectDB.connectDB();
         PreparedStatement stmt;
         String sql = "select * from reports where meetingId = ?";
         String out="";
         try {
+            Connection conn = ConnectDB.connectDB();
             stmt = conn.prepareStatement(sql);
             stmt.setInt(1, meetingId);
             System.out.println(stmt);
@@ -633,6 +709,7 @@ public class RemoteImpl implements RemoteInterface {
                 report.setTimeCreate(timeCreate);
                 listReport.add(report);
             }
+            conn.close();
             return listReport;
         } catch (SQLException ex) {
             Logger.getLogger(RemoteImpl.class.getName()).log(Level.SEVERE, null, ex);
@@ -641,19 +718,21 @@ public class RemoteImpl implements RemoteInterface {
     }
     @Override
     public String getReportContent(int reportId) throws RemoteException {
-        Connection conn = ConnectDB.connectDB();
         PreparedStatement stmt = null;
         String sql = "select * from reports where id = ?";
         String out="";
         try {
+            Connection conn = ConnectDB.connectDB();
             stmt = conn.prepareStatement(sql);
             stmt.setInt(1, reportId);
             System.out.println(stmt);
             ResultSet rs = stmt.executeQuery();
             if(rs.next()){
                 out = rs.getString("reportContent");
+                conn.close();
                 return out;
             }
+            conn.close();
         } catch (SQLException ex) {
             Logger.getLogger(RemoteImpl.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -661,14 +740,15 @@ public class RemoteImpl implements RemoteInterface {
     }
     @Override
     public int addPeopleEdit(PeopleEditReport per) throws RemoteException {
-        Connection conn = ConnectDB.connectDB();
         String sql = "INSERT INTO peopleeditreport (reportId, userId) VALUES ( ?, ?);";
         System.out.println(sql);
         try {
+            Connection conn = ConnectDB.connectDB();
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setInt(1, per.getReportId());
             stmt.setInt(2, per.getUserId());
             int i = stmt.executeUpdate();
+            conn.close();
             return i;
         } catch (SQLException ex) {
             Logger.getLogger(RemoteImpl.class.getName()).log(Level.SEVERE, null, ex);
@@ -677,17 +757,18 @@ public class RemoteImpl implements RemoteInterface {
     }
     @Override
     public List<Integer> getIdOfUserEdit(int reportId) throws RemoteException {
-        Connection conn = ConnectDB.connectDB();
         PreparedStatement stmt = null;
         String sql = "select * from peopleeditreport where reportId = ?";
         List<Integer> list= new ArrayList<>();
         try {
+            Connection conn = ConnectDB.connectDB();
             stmt = conn.prepareStatement(sql);
             stmt.setInt(1, reportId);
             ResultSet rs = stmt.executeQuery();
             while(rs.next()){
                 list.add(rs.getInt("userId"));
             }
+            conn.close();
             return list;
         } catch (SQLException ex) {
             Logger.getLogger(RemoteImpl.class.getName()).log(Level.SEVERE, null, ex);
@@ -696,11 +777,11 @@ public class RemoteImpl implements RemoteInterface {
     }
     @Override
     public int getPeopleEdit(PeopleEditReport per) throws RemoteException {
-        Connection conn = ConnectDB.connectDB();
         PreparedStatement stmt = null;
         String sql = "select * from peopleeditreport where reportId = ? and userId = ?";
         int out;
         try {
+            Connection conn = ConnectDB.connectDB();
             stmt = conn.prepareStatement(sql);
             stmt.setInt(1, per.getReportId());
             stmt.setInt(2, per.getUserId());
@@ -708,6 +789,7 @@ public class RemoteImpl implements RemoteInterface {
             ResultSet rs = stmt.executeQuery();
             if(rs.next()){
                 out = rs.getInt("id");
+                conn.close();
                 return out;
             }
         } catch (SQLException ex) {
@@ -717,14 +799,15 @@ public class RemoteImpl implements RemoteInterface {
     }
     @Override
     public int removePeopleEdit(int peopleEditId) throws RemoteException{
-        Connection conn = ConnectDB.connectDB();
         PreparedStatement stmt;
         String sql = "DELETE FROM peopleeditreport WHERE id = ?";
         int out;
         try {
+            Connection conn = ConnectDB.connectDB();
             stmt = conn.prepareStatement(sql);
             stmt.setInt(1, peopleEditId);
             int i = stmt.executeUpdate();
+            conn.close();
             return i;
         } catch (SQLException ex) {
             Logger.getLogger(RemoteImpl.class.getName()).log(Level.SEVERE, null, ex);
@@ -736,18 +819,20 @@ public class RemoteImpl implements RemoteInterface {
     // Remote implement for permission
     @Override
     public String getPermission(User user, Meeting meeting) throws RemoteException{
-        Connection conn = ConnectDB.connectDB();
         PreparedStatement stmt;
         String sql = "select * from userpermission WHERE userId = ? and meetingId = ?";
         try {
+            Connection conn = ConnectDB.connectDB();
             stmt = conn.prepareStatement(sql);
             stmt.setInt(1, user.getId());
             stmt.setInt(2, meeting.getId());
             ResultSet rs = stmt.executeQuery();
             if (rs.next()){
                 String out = rs.getString("permission");
+                conn.close();
                 return out;
             }
+            conn.close();
         } catch (SQLException ex) {
             Logger.getLogger(RemoteImpl.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -755,14 +840,15 @@ public class RemoteImpl implements RemoteInterface {
     }
     @Override
     public int addPermission(User user, Meeting meeting, String permission) throws RemoteException{
-        Connection conn = ConnectDB.connectDB();
         String sql = "INSERT INTO userpermission (userId, meetingId, permission) VALUES (?, ?, ?);";
         try {
+            Connection conn = ConnectDB.connectDB();
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setInt(1, user.getId());
             stmt.setInt(2, meeting.getId());
             stmt.setString(3, permission);
             int i = stmt.executeUpdate();
+            conn.close();
             return i;
         } catch (SQLException ex) {
             Logger.getLogger(RemoteImpl.class.getName()).log(Level.SEVERE, null, ex);
