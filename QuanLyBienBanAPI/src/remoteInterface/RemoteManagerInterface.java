@@ -6,7 +6,6 @@
 package remoteInterface;
 
 import entity.Meeting;
-import entity.User;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.List;

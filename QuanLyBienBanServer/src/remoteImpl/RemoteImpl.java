@@ -37,6 +37,7 @@ import java.util.GregorianCalendar;
 import java.util.Vector;
 import mainServer.GUIServer;
 import remoteInterface.ConnectDB;
+import remoteInterface.RemoteAdminInterface;
 import remoteInterface.RemoteInterface;
 import remoteInterface.RemoteManagerInterface;
 import remoteInterface.TestRemoteClientInterface;
@@ -48,9 +49,11 @@ import remoteInterface.TestRemoteClientInterface;
 public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {    
     private Vector testClients;
     private Vector managerClients;
+    private Vector adminClients;
     public RemoteImpl() throws RemoteException{
         super();
         managerClients = new Vector();
+        adminClients = new Vector();
     }
 //Remote for callback
     @Override
@@ -91,6 +94,7 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
             rm.updateReporterComboBox(meetingId);
         }
     }
+    @Override
     public void updateUserSharedComboBox(int meetingId) throws RemoteException{
         for (int i = 0; i < managerClients.size() ; i++){
             RemoteManagerInterface rm = (RemoteManagerInterface)managerClients.elementAt(i);
@@ -102,6 +106,21 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
         for (int i = 0; i < managerClients.size() ; i++){
             RemoteManagerInterface rm = (RemoteManagerInterface)managerClients.elementAt(i);
             rm.updateReporterTable(meetingId);
+        }
+    }
+    @Override
+    public synchronized void addRemoteAdminInterface(RemoteAdminInterface ra) throws RemoteException{
+        adminClients.addElement(ra);
+    }
+    @Override
+    public synchronized void removeRemoteAdminInterface(RemoteAdminInterface ra) throws RemoteException{
+        adminClients.removeElement(ra);
+    }
+    @Override
+    public void adminUpdateUserTable(List<User> list) throws RemoteException{
+        for (int i = 0; i < adminClients.size() ; i++){
+            RemoteAdminInterface ra = (RemoteAdminInterface)adminClients.elementAt(i);
+            ra.adminUpdateUserTable(list);
         }
     }
 // end for callback

@@ -10,12 +10,17 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import entity.User;
 import helpfile.EncryptPassword;
+import java.net.MalformedURLException;
+import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 import quanlybienbanclientController.UserController;
 import registry.Register;
+import remoteInterface.RemoteAdminInterface;
 import remoteInterface.RemoteInterface;
 
 /**
@@ -24,6 +29,8 @@ import remoteInterface.RemoteInterface;
  */
 public class GUIAdminClient extends javax.swing.JFrame {
     private final UserController userController;
+    private String passwdOfUserSelected;
+    private RemoteAdminImpl remoteAdminImpl;
     public static User user;
     public static void updateTable(List<User> list){
         Object[] column = {"Id", "Username", "Password", "Fullname", "Position" };
@@ -34,7 +41,7 @@ public class GUIAdminClient extends javax.swing.JFrame {
                     Object[] row = {u.getId(), u.getUsername(), u.getPassword(), u.getFullname(), u.getPosition()};
                     model.addRow(row);
                 }
-                GUIAdminClient.jTable1.setModel(model);
+                GUIAdminClient.userTable.setModel(model);
             } catch (Exception ex) {
                 Logger.getLogger(GUIAdminClient.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -43,6 +50,11 @@ public class GUIAdminClient extends javax.swing.JFrame {
      * Creates new form GUIClient
      */
     public GUIAdminClient() {
+        try {
+            remoteAdminImpl = new RemoteAdminImpl();
+        } catch (RemoteException | NotBoundException | MalformedURLException ex) {
+            Logger.getLogger("Can not init callback Object!");
+        }
         initComponents();
         this.jLabel2.setText(user.getUsername());
         userController = new UserController();
@@ -64,7 +76,7 @@ public class GUIAdminClient extends javax.swing.JFrame {
         jLabel2 = new javax.swing.JLabel();
         jButton2 = new javax.swing.JButton();
         jScrollPane2 = new javax.swing.JScrollPane();
-        jTable1 = new javax.swing.JTable();
+        userTable = new javax.swing.JTable();
         addButton = new javax.swing.JButton();
         editButton = new javax.swing.JButton();
         deleteButton = new javax.swing.JButton();
@@ -78,6 +90,8 @@ public class GUIAdminClient extends javax.swing.JFrame {
         fullnameTF = new javax.swing.JTextField();
         positionTF = new javax.swing.JTextField();
         clearButton = new javax.swing.JButton();
+        jLabel8 = new javax.swing.JLabel();
+        idTF = new javax.swing.JTextField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setResizable(false);
@@ -95,7 +109,7 @@ public class GUIAdminClient extends javax.swing.JFrame {
             }
         });
 
-        jTable1.setModel(new javax.swing.table.DefaultTableModel(
+        userTable.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
 
             },
@@ -111,12 +125,12 @@ public class GUIAdminClient extends javax.swing.JFrame {
                 return canEdit [columnIndex];
             }
         });
-        jTable1.addMouseListener(new java.awt.event.MouseAdapter() {
+        userTable.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mousePressed(java.awt.event.MouseEvent evt) {
-                jTable1MousePressed(evt);
+                userTableMousePressed(evt);
             }
         });
-        jScrollPane2.setViewportView(jTable1);
+        jScrollPane2.setViewportView(userTable);
 
         addButton.setText("Add new");
         addButton.addActionListener(new java.awt.event.ActionListener() {
@@ -168,21 +182,26 @@ public class GUIAdminClient extends javax.swing.JFrame {
             }
         });
 
+        jLabel8.setText("Id");
+
+        idTF.setEditable(false);
+        idTF.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                idTFActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                .addGap(0, 0, Short.MAX_VALUE)
+                .addComponent(jLabel1)
+                .addGap(264, 264, 264))
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jLabel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .addGap(18, 18, 18)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(passwordTF)
-                            .addComponent(usernameTF)))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(jLabel3)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -199,18 +218,26 @@ public class GUIAdminClient extends javax.swing.JFrame {
                         .addGap(18, 18, 18)
                         .addComponent(deleteButton, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(jLabel6, javax.swing.GroupLayout.DEFAULT_SIZE, 70, Short.MAX_VALUE)
-                            .addComponent(jLabel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(positionTF))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(fullnameTF))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 72, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(passwordTF))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                            .addComponent(jLabel8, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jLabel4, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .addGap(18, 18, 18)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(fullnameTF)
-                            .addComponent(positionTF))))
+                            .addComponent(usernameTF)
+                            .addComponent(idTF))))
                 .addContainerGap())
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addGap(0, 0, Short.MAX_VALUE)
-                .addComponent(jLabel1)
-                .addGap(264, 264, 264))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -230,6 +257,10 @@ public class GUIAdminClient extends javax.swing.JFrame {
                     .addComponent(deleteButton)
                     .addComponent(addButton)
                     .addComponent(clearButton))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 23, Short.MAX_VALUE)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel8)
+                    .addComponent(idTF, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel4)
@@ -243,10 +274,10 @@ public class GUIAdminClient extends javax.swing.JFrame {
                     .addComponent(jLabel6)
                     .addComponent(fullnameTF, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel7)
-                    .addComponent(positionTF, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(17, Short.MAX_VALUE))
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel7, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(positionTF, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap())
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -265,7 +296,6 @@ public class GUIAdminClient extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void addButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addButtonActionPerformed
-        UserController userController = new UserController();
         String susername = this.usernameTF.getText();
         String spassword = this.passwordTF.getText();
         String sfullname = this.fullnameTF.getText();
@@ -284,7 +314,11 @@ public class GUIAdminClient extends javax.swing.JFrame {
         if (i > 0){
             JOptionPane.showMessageDialog(rootPane, "Success!");
             List<User> list = userController.getUsers();
-            GUIAdminClient.updateTable(list);
+            try {
+                remoteAdminImpl.h.adminUpdateUserTable(list);
+            } catch (RemoteException ex) {
+                Logger.getLogger("Khong update duoc table!");
+            }
             this.usernameTF.setText("");
             this.passwordTF.setText("");
             this.fullnameTF.setText("");
@@ -296,10 +330,7 @@ public class GUIAdminClient extends javax.swing.JFrame {
     }//GEN-LAST:event_addButtonActionPerformed
 
     private void editButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_editButtonActionPerformed
-        int rowSelected = GUIAdminClient.jTable1.getSelectedRow();
-        if (rowSelected > -1){
-            int userId = (int) GUIAdminClient.jTable1.getValueAt(rowSelected, 0);
-            UserController userController = new UserController();
+        if (!"".equals(idTF.getText())){
             String susername = this.usernameTF.getText();
             String spassword = this.passwordTF.getText();
             String sfullname = this.fullnameTF.getText();
@@ -308,9 +339,13 @@ public class GUIAdminClient extends javax.swing.JFrame {
                 JOptionPane.showMessageDialog(rootPane, "These fields are required");
                 return;
             }
-            String encryptedPasswd = EncryptPassword.getMD5(spassword);
+            String encryptedPasswd;
+            if (spassword.equals(this.passwdOfUserSelected)){
+                encryptedPasswd = spassword;
+            }
+            else{ encryptedPasswd = EncryptPassword.getMD5(spassword); }
             User tempuser = new User();
-            tempuser.setId(userId);
+            tempuser.setId(Integer.parseInt(idTF.getText()));
             tempuser.setUsername(susername);
             tempuser.setPassword(encryptedPasswd);
             tempuser.setPosition(sposition);
@@ -321,6 +356,12 @@ public class GUIAdminClient extends javax.swing.JFrame {
                 JOptionPane.showMessageDialog(rootPane, "Success!");
                 List<User> list = userController.getUsers();
                 GUIAdminClient.updateTable(list);
+                try {
+                    remoteAdminImpl.h.adminUpdateUserTable(list);
+                } catch (RemoteException ex) {
+                    Logger.getLogger("Khong update duoc table!");
+                }
+                this.idTF.setText("");
                 this.usernameTF.setText("");
                 this.passwordTF.setText("");
                 this.fullnameTF.setText("");
@@ -336,16 +377,21 @@ public class GUIAdminClient extends javax.swing.JFrame {
     }//GEN-LAST:event_editButtonActionPerformed
 
     private void deleteButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteButtonActionPerformed
-        int rowSelected = GUIAdminClient.jTable1.getSelectedRow();
-        if (rowSelected > 0){
+        if (!"".equals(idTF.getText())){
             if(JOptionPane.showConfirmDialog(rootPane, "Are you sure?","",JOptionPane.YES_NO_OPTION) == 0){
-                int userId = (int) GUIAdminClient.jTable1.getValueAt(rowSelected, 0);
+                int userId = Integer.parseInt(idTF.getText());
                 User deluser = userController.getUser(userId);
                 int i = userController.deleteUser(deluser);
                 if (i > 0){
                     JOptionPane.showMessageDialog(rootPane, "Deleted!");
                     List<User> list = userController.getUsers();
                     GUIAdminClient.updateTable(list);
+                    try {
+                        remoteAdminImpl.h.adminUpdateUserTable(list);
+                    } catch (RemoteException ex) {
+                        Logger.getLogger("Khong update duoc table!");
+                    }
+                    this.idTF.setText("");
                     this.usernameTF.setText("");
                     this.passwordTF.setText("");
                     this.fullnameTF.setText("");
@@ -369,9 +415,14 @@ public class GUIAdminClient extends javax.swing.JFrame {
                     RemoteInterface stub = Register.registry();
                     stub.clientLogoutMessage(user);
             } catch (RemoteException | NotBoundException ex) {
-                Logger.getLogger(GUIAdminClient.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger("Log out error");
             }
-            GUIAdminClient.user = new User();
+            try {
+                this.remoteAdminImpl.h.removeRemoteAdminInterface(remoteAdminImpl);
+            } catch (RemoteException ex) {
+                Logger.getLogger("unregistration admin failed!");
+            }
+            GUIAdminClient.user = null;
         }
     }//GEN-LAST:event_jButton2ActionPerformed
 
@@ -383,21 +434,45 @@ public class GUIAdminClient extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_positionTFActionPerformed
 
-    private void jTable1MousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable1MousePressed
-        int row = GUIAdminClient.jTable1.getSelectedRow();
-        this.usernameTF.setText(GUIAdminClient.jTable1.getValueAt(row, 1).toString());
-        this.passwordTF.setText(GUIAdminClient.jTable1.getValueAt(row, 2).toString());
-        this.fullnameTF.setText(GUIAdminClient.jTable1.getValueAt(row, 3).toString());
-        this.positionTF.setText(GUIAdminClient.jTable1.getValueAt(row, 4).toString());
-    }//GEN-LAST:event_jTable1MousePressed
+    private void userTableMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_userTableMousePressed
+        int row = GUIAdminClient.userTable.getSelectedRow();
+        this.idTF.setText(GUIAdminClient.userTable.getValueAt(row, 0).toString());
+        this.usernameTF.setText(GUIAdminClient.userTable.getValueAt(row, 1).toString());
+        this.passwordTF.setText(GUIAdminClient.userTable.getValueAt(row, 2).toString());
+        this.passwdOfUserSelected = GUIAdminClient.userTable.getValueAt(row, 2).toString();
+        this.fullnameTF.setText(GUIAdminClient.userTable.getValueAt(row, 3).toString());
+        this.positionTF.setText(GUIAdminClient.userTable.getValueAt(row, 4).toString());
+    }//GEN-LAST:event_userTableMousePressed
 
     private void clearButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearButtonActionPerformed
+        GUIAdminClient.userTable.clearSelection();
+        this.idTF.setText("");
         this.usernameTF.setText("");
         this.passwordTF.setText("");
         this.fullnameTF.setText("");
         this.positionTF.setText("");
     }//GEN-LAST:event_clearButtonActionPerformed
 
+    private void idTFActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_idTFActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_idTFActionPerformed
+
+    class RemoteAdminImpl extends UnicastRemoteObject implements RemoteAdminInterface{
+        public RemoteInterface h;
+        public RemoteAdminImpl() throws RemoteException, NotBoundException, MalformedURLException {
+            h = (RemoteInterface)Naming.lookup("remoteInterface");
+            h.addRemoteAdminInterface(this);
+        }
+        @Override
+        public void adminUpdateUserTable(List<User> list) throws RemoteException {
+            SwingUtilities.invokeLater(new Runnable(){
+                public void run(){
+                    GUIAdminClient.updateTable(list);
+                }
+            });
+        }
+    
+    }
     /**
      * @param args the command line arguments
      */
@@ -439,7 +514,8 @@ public class GUIAdminClient extends javax.swing.JFrame {
     private javax.swing.JButton clearButton;
     private javax.swing.JButton deleteButton;
     private javax.swing.JButton editButton;
-    private javax.swing.JTextField fullnameTF;
+    javax.swing.JTextField fullnameTF;
+    private javax.swing.JTextField idTF;
     private javax.swing.JButton jButton2;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
@@ -448,11 +524,12 @@ public class GUIAdminClient extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
+    private javax.swing.JLabel jLabel8;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane2;
-    public static javax.swing.JTable jTable1;
-    private javax.swing.JTextField passwordTF;
-    private javax.swing.JTextField positionTF;
-    private javax.swing.JTextField usernameTF;
+    javax.swing.JTextField passwordTF;
+    javax.swing.JTextField positionTF;
+    public static javax.swing.JTable userTable;
+    javax.swing.JTextField usernameTF;
     // End of variables declaration//GEN-END:variables
 }

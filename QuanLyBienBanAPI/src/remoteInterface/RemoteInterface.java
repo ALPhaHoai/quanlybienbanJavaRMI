@@ -31,6 +31,10 @@ public interface RemoteInterface extends Remote{
     public void updateReporterComboBox(int meetingId) throws RemoteException;
     public void updateUserSharedComboBox(int meetingId) throws RemoteException;
     public void updateReporterTable(int meetingId) throws RemoteException;
+    
+    public void addRemoteAdminInterface(RemoteAdminInterface ra) throws RemoteException;
+    public void removeRemoteAdminInterface(RemoteAdminInterface ra) throws RemoteException;
+    public void adminUpdateUserTable(List<User> list) throws RemoteException;
     // interface for user
     public List<User> getUsers() throws RemoteException;
     public User getUser(String username, String password) throws RemoteException;

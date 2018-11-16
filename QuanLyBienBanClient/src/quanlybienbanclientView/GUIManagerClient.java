@@ -42,7 +42,7 @@ import remoteInterface.RemoteManagerInterface;
  */
 public class GUIManagerClient extends javax.swing.JFrame {
     
-    private PermissionController permissionController;
+    private final PermissionController permissionController;
     private RemoteManagerImpl remoteManagerImpl;
     private Meeting meetingSelected;
     private final MeetingController meetingController;
@@ -875,6 +875,8 @@ public class GUIManagerClient extends javax.swing.JFrame {
                         }
                     }
                     GUIManagerClient.updateTable(listHavePermission);
+                    GUIManagerClient.this.meetingText.setText("");
+                    GUIManagerClient.this.timeText.setText("HH:mm:ss");
                 }
             });
         }
