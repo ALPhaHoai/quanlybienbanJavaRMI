@@ -30,6 +30,7 @@ import javax.swing.table.DefaultTableModel;
 import quanlybienbanclientController.MeetingController;
 import quanlybienbanclientController.PermissionController;
 import quanlybienbanclientController.ReportController;
+import quanlybienbanclientController.ReportPartController;
 import quanlybienbanclientController.UserController;
 import registry.Register;
 import remoteInterface.RemoteInterface;
@@ -40,12 +41,29 @@ import remoteInterface.RemoteManagerInterface;
  * @author thanhdovan
  */
 public class GUIManagerClient extends javax.swing.JFrame {
+    
     private PermissionController permissionController;
     private RemoteManagerImpl remoteManagerImpl;
+    private Meeting meetingSelected;
     private final MeetingController meetingController;
     private final UserController userController;
+    private final ReportPartController reportPartController;
     private final ReportController reportController;
     public static User user;
+    public static void updateReporterTable(List<User> reporters){
+        Object[] column = {"UserId", "Username", "User Position"};
+        DefaultTableModel model = new DefaultTableModel();
+        model.setColumnIdentifiers(column);
+        try {
+            for (User u : reporters ){
+                Object[] row = {u.getId(), u.getUsername(), u.getPosition()};
+                model.addRow(row);
+            }
+            GUIManagerClient.reporterTable.setModel(model);
+        } catch (Exception ex) {
+            Logger.getLogger(GUIAdminClient.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
     public static void updateTable(List<Meeting> list){
         Object[] column = {"Id", "Meeting", "Date", "Time Start"};
         DefaultTableModel model = new DefaultTableModel();
@@ -78,6 +96,18 @@ public class GUIManagerClient extends javax.swing.JFrame {
         out.remove(k);
         return out;
     }
+    public static void updateReporterComboBox(List<User> listReporter){
+        GUIManagerClient.selectReporterComboBox.removeAll();
+        for (User u : listReporter){
+            GUIManagerClient.selectReporterComboBox.addItem(u.getId()+" - "+u.getUsername()+ " - "+ u.getPosition());
+        }
+    }
+    public static void updateUserSharedComboBox(List<User> listUserDontHavePermission){
+        GUIManagerClient.userSharedComboBox.removeAll();
+        for (User u : listUserDontHavePermission){
+            GUIManagerClient.userSharedComboBox.addItem(u.getId()+" - "+u.getUsername()+ " - "+ u.getPosition());
+        }
+    }
     /**
      * Creates new form GUIManagerClient
      */
@@ -85,10 +115,11 @@ public class GUIManagerClient extends javax.swing.JFrame {
         try {
             remoteManagerImpl = new RemoteManagerImpl();
         } catch (RemoteException | NotBoundException | MalformedURLException ex) {
-            Logger.getLogger(GUIManagerClient.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger("Can not init callback Object!");
         }
         initComponents();
         this.nameLabel.setText(user.getUsername());
+        reportPartController = new ReportPartController();
         permissionController = new PermissionController();
         meetingController = new MeetingController();
         reportController = new ReportController();
@@ -135,11 +166,15 @@ public class GUIManagerClient extends javax.swing.JFrame {
         editButton = new javax.swing.JButton();
         deleteButton = new javax.swing.JButton();
         jButton1 = new javax.swing.JButton();
-        reportButton = new javax.swing.JButton();
+        addReporterButton = new javax.swing.JButton();
         shareButton = new javax.swing.JButton();
-        jComboBox1 = new javax.swing.JComboBox<>();
-        jRadioButton1 = new javax.swing.JRadioButton();
-        jRadioButton2 = new javax.swing.JRadioButton();
+        userSharedComboBox = new javax.swing.JComboBox<>();
+        readOnlyRadioButton = new javax.swing.JRadioButton();
+        writeRadioButton = new javax.swing.JRadioButton();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        reporterTable = new javax.swing.JTable();
+        selectReporterComboBox = new javax.swing.JComboBox<>();
+        deleteReporterButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setResizable(false);
@@ -243,10 +278,10 @@ public class GUIManagerClient extends javax.swing.JFrame {
             }
         });
 
-        reportButton.setText("Reporter");
-        reportButton.addActionListener(new java.awt.event.ActionListener() {
+        addReporterButton.setText("Add Reporter");
+        addReporterButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                reportButtonActionPerformed(evt);
+                addReporterButtonActionPerformed(evt);
             }
         });
 
@@ -257,19 +292,62 @@ public class GUIManagerClient extends javax.swing.JFrame {
             }
         });
 
-        buttonGroup1.add(jRadioButton1);
-        jRadioButton1.setText("Read-Only");
-        jRadioButton1.addActionListener(new java.awt.event.ActionListener() {
+        buttonGroup1.add(readOnlyRadioButton);
+        readOnlyRadioButton.setText("Read-Only");
+        readOnlyRadioButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jRadioButton1ActionPerformed(evt);
+                readOnlyRadioButtonActionPerformed(evt);
             }
         });
 
-        buttonGroup1.add(jRadioButton2);
-        jRadioButton2.setText("Write");
-        jRadioButton2.addActionListener(new java.awt.event.ActionListener() {
+        buttonGroup1.add(writeRadioButton);
+        writeRadioButton.setText("Write");
+        writeRadioButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jRadioButton2ActionPerformed(evt);
+                writeRadioButtonActionPerformed(evt);
+            }
+        });
+
+        reporterTable.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "UserId", "UserName", "UserPosition"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.Integer.class, java.lang.String.class, java.lang.String.class
+            };
+            boolean[] canEdit = new boolean [] {
+                false, false, false
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        reporterTable.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                reporterTableMousePressed(evt);
+            }
+        });
+        jScrollPane2.setViewportView(reporterTable);
+
+        selectReporterComboBox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                selectReporterComboBoxActionPerformed(evt);
+            }
+        });
+
+        deleteReporterButton.setText("Delete Reporter");
+        deleteReporterButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                deleteReporterButtonActionPerformed(evt);
             }
         });
 
@@ -287,44 +365,49 @@ public class GUIManagerClient extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(logoutButton, javax.swing.GroupLayout.PREFERRED_SIZE, 160, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 346, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 346, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 346, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(viewReportButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(12, 12, 12)
+                                .addComponent(addMeetingButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                             .addGroup(jPanel1Layout.createSequentialGroup()
                                 .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 64, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(meetingText))
-                            .addComponent(viewReportButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(reportButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addGroup(jPanel1Layout.createSequentialGroup()
                                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 64, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addGroup(jPanel1Layout.createSequentialGroup()
-                                        .addGap(1, 1, 1)
-                                        .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 64, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 64, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(dateChooserCombo1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                    .addGroup(jPanel1Layout.createSequentialGroup()
+                                        .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 64, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(timeText)))
+                                .addGap(1, 1, 1))
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(timeText)
-                                    .addComponent(dateChooserCombo1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                                .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(addMeetingButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                                .addGap(0, 0, Short.MAX_VALUE)
-                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                                     .addGroup(jPanel1Layout.createSequentialGroup()
                                         .addComponent(editButton, javax.swing.GroupLayout.PREFERRED_SIZE, 201, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                        .addComponent(deleteButton, javax.swing.GroupLayout.PREFERRED_SIZE, 208, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                    .addGroup(jPanel1Layout.createSequentialGroup()
-                                        .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, 144, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(jRadioButton1)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(jRadioButton2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(shareButton)))))))
+                                        .addGap(0, 0, Short.MAX_VALUE))
+                                    .addComponent(addReporterButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addGap(18, 18, 18)
+                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                    .addComponent(deleteButton, javax.swing.GroupLayout.DEFAULT_SIZE, 208, Short.MAX_VALUE)
+                                    .addComponent(deleteReporterButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                            .addComponent(selectReporterComboBox, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(readOnlyRadioButton)
+                                .addGap(18, 18, 18)
+                                .addComponent(writeRadioButton, javax.swing.GroupLayout.PREFERRED_SIZE, 82, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(18, 18, 18)
+                                .addComponent(shareButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addComponent(userSharedComboBox, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
@@ -335,39 +418,47 @@ public class GUIManagerClient extends javax.swing.JFrame {
                     .addComponent(welcomeLabel)
                     .addComponent(nameLabel)
                     .addComponent(logoutButton))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 44, Short.MAX_VALUE)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 175, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(addMeetingButton)
-                            .addComponent(jButton1))
-                        .addGap(30, 30, 30)
+                            .addComponent(jButton1)
+                            .addComponent(addMeetingButton))
+                        .addGap(18, 18, 18)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel1)
                             .addComponent(meetingText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(22, 22, 22)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                             .addComponent(jLabel2)
                             .addComponent(dateChooserCombo1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(23, 23, 23)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel3)
                             .addComponent(timeText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(18, 18, 18)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(editButton)
-                            .addComponent(deleteButton))
+                            .addComponent(deleteButton))))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(selectReporterComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(reportButton)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(deleteReporterButton)
+                            .addComponent(addReporterButton))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 60, Short.MAX_VALUE)
+                        .addComponent(userSharedComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(shareButton)
-                            .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jRadioButton1)
-                            .addComponent(jRadioButton2))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(writeRadioButton)
+                            .addComponent(readOnlyRadioButton))
+                        .addGap(8, 8, 8)
                         .addComponent(viewReportButton))
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 339, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
                 .addContainerGap())
         );
 
@@ -387,19 +478,47 @@ public class GUIManagerClient extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jTable1MousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable1MousePressed
-        this.jComboBox1.removeAllItems();
+        this.userSharedComboBox.removeAllItems();
         int row = GUIManagerClient.jTable1.getSelectedRow();
         int meetingId = Integer.parseInt(GUIManagerClient.jTable1.getValueAt(row, 0).toString().substring(3));
-        Meeting m = meetingController.getMeeting(meetingId);
-        List<User> us = this.getUserDontHavePermission(m);
+        meetingSelected = meetingController.getMeeting(meetingId);
+        List<User> us = this.getUserDontHavePermission(meetingSelected);
         for (User u : us){
-            this.jComboBox1.addItem(u.getId()+"-"+u.getUsername());
+            this.userSharedComboBox.addItem(u.getId()+" - "+u.getUsername()+" - "+u.getPosition());
         }
         this.meetingText.setText(GUIManagerClient.jTable1.getValueAt(row, 1).toString());
         Calendar cal = new GregorianCalendar();
-        cal.setTime((Date)GUIManagerClient.jTable1.getValueAt(row, 2));
+        cal.setTime((java.sql.Date)GUIManagerClient.jTable1.getValueAt(row, 2));
         this.dateChooserCombo1.setSelectedDate(cal);
         this.timeText.setText(GUIManagerClient.jTable1.getValueAt(row, 3).toString());
+
+        //
+        this.selectReporterComboBox.removeAllItems();
+        List<Integer> reporterIds = meetingController.getReporterIds(meetingId);
+        List<User> reporters = new ArrayList<>();
+        if (reporterIds != null){
+            for (Integer reporterId : reporterIds){
+
+                User reporter = userController.getUser(reporterId);
+                reporters.add(reporter);
+            }
+        }
+        GUIManagerClient.updateReporterTable(reporters);
+
+        List<Integer> userIds = new ArrayList<>();
+        List<User> users = userController.getUsers();
+
+        for (User u : users){
+            userIds.add(u.getId());
+        }
+
+        userIds.removeAll(reporterIds);
+        for (int i : userIds){
+            User u = userController.getUser(i);
+            if("staff".equals(u.getPosition())){
+                        this.selectReporterComboBox.addItem(u.getId()+" - "+u.getUsername() + " - " + u.getPosition());
+            }
+        }
     }//GEN-LAST:event_jTable1MousePressed
 
     private void editButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_editButtonActionPerformed
@@ -408,9 +527,7 @@ public class GUIManagerClient extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(rootPane, "Choose a meeting first!");
             return;
         }
-        int meetingId = Integer.parseInt(GUIManagerClient.jTable1.getValueAt(row, 0).toString().substring(3));
-        GUIReporter.meeting = this.meetingController.getMeeting(meetingId);
-        if (GUIReporter.meeting.getUserCreateId() == GUIManagerClient.user.getId()){
+        if (meetingSelected.getUserCreateId() == GUIManagerClient.user.getId()){
             if(JOptionPane.showConfirmDialog(rootPane, "Are you sure?", "", JOptionPane.YES_NO_OPTION) == 0){        
                 String title = this.meetingText.getText();
                 Calendar cal = this.dateChooserCombo1.getSelectedDate();
@@ -428,12 +545,12 @@ public class GUIManagerClient extends javax.swing.JFrame {
                 } catch (ParseException ex) {
                     Logger.getLogger(GUIManagerClient.class.getName()).log(Level.SEVERE, null, ex);
                 }
-                Meeting meeting = new Meeting();
-                meeting.setId(Integer.parseInt(GUIManagerClient.jTable1.getValueAt(GUIManagerClient.jTable1.getSelectedRow(), 0).toString().substring(3)));
-                meeting.setTitle(title);
-                meeting.setDate(sqlDate);
-                meeting.setTimeStart(timeValue);
-                int i = meetingController.editMeeting(meeting);
+                Meeting meetingx = new Meeting();
+                meetingx.setId(Integer.parseInt(GUIManagerClient.jTable1.getValueAt(GUIManagerClient.jTable1.getSelectedRow(), 0).toString().substring(3)));
+                meetingx.setTitle(title);
+                meetingx.setDate(sqlDate);
+                meetingx.setTimeStart(timeValue);
+                int i = meetingController.editMeeting(meetingx);
                 if (i > 0){
                     JOptionPane.showMessageDialog(rootPane, "Success!");
                     List<Meeting> list = meetingController.getMeetings();
@@ -442,6 +559,12 @@ public class GUIManagerClient extends javax.swing.JFrame {
                     } catch (RemoteException ex) {
                         Logger.getLogger("Khong update duoc table!");
                     }
+                    this.meetingText.setText("");
+                    this.timeText.setText("HH:mm:ss");
+                    GUIManagerClient.jTable1.clearSelection();
+                    GUIManagerClient.selectReporterComboBox.removeAllItems();
+                    this.userSharedComboBox.removeAllItems();
+                    this.buttonGroup1.clearSelection();
                 }
             }
         }
@@ -483,21 +606,30 @@ public class GUIManagerClient extends javax.swing.JFrame {
             if (i > 0){
                 JOptionPane.showMessageDialog(rootPane, "Success!");
                 List<Meeting> list = meetingController.getMeetings();
-    //            GUIManagerClient.updateTable(list);
                 try {
                     remoteManagerImpl.h.updateMeetingTable(list);
                 } catch (RemoteException ex) {
                     Logger.getLogger("Khong update duoc table!");
                 }
-        }
-        else {
-            JOptionPane.showMessageDialog(rootPane, "Failed! Please try again!");
-        }
+            this.meetingText.setText("");
+            this.timeText.setText("HH:mm:ss");
+            GUIManagerClient.jTable1.clearSelection();
+            GUIManagerClient.selectReporterComboBox.removeAllItems();
+            this.userSharedComboBox.removeAllItems();
+            this.buttonGroup1.clearSelection();
+            } else {
+                JOptionPane.showMessageDialog(rootPane, "Failed! Please try again!");
+            }
         }
     }//GEN-LAST:event_addMeetingButtonActionPerformed
 
     private void logoutButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_logoutButtonActionPerformed
         if(JOptionPane.showConfirmDialog(rootPane,"Are you sure?", "", JOptionPane.YES_NO_OPTION) == 0){
+            try {
+                this.remoteManagerImpl.h.removeRemoteManagerInterface(remoteManagerImpl);
+            } catch (RemoteException ex) {
+                Logger.getLogger("unregistration failed!");
+            }
             LoginForm lg = new LoginForm();
             lg.setVisible(true);
             this.setVisible(false);
@@ -507,20 +639,23 @@ public class GUIManagerClient extends javax.swing.JFrame {
             } catch (RemoteException | NotBoundException ex) {
                 Logger.getLogger(GUIAdminClient.class.getName()).log(Level.SEVERE, null, ex);
             }
-            GUIManagerClient.user = new User();
+            GUIManagerClient.user = null;
         }
+        
     }//GEN-LAST:event_logoutButtonActionPerformed
 
     private void deleteButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteButtonActionPerformed
         int rowSelected = GUIManagerClient.jTable1.getSelectedRow();
         if (rowSelected > -1){
             int meetingId = Integer.parseInt(GUIManagerClient.jTable1.getValueAt(rowSelected, 0).toString().substring(3));
-            GUIReporter.meeting = this.meetingController.getMeeting(meetingId);
-            if (GUIReporter.meeting.getUserCreateId() == GUIManagerClient.user.getId()){
+            if (meetingSelected.getUserCreateId() == GUIManagerClient.user.getId()){
                 if(JOptionPane.showConfirmDialog(rootPane, "Are you sure?","",JOptionPane.YES_NO_OPTION) == 0){
                     Meeting delmeeting = meetingController.getMeeting(meetingId);
-                    int i = meetingController.deleteMeeting(delmeeting);
-                    if (i > 0){
+                    permissionController.deletePermission(meetingId);
+                    reportController.deleteReports(meetingId);
+                    reportPartController.deleteReportParts(meetingId);
+                    int result = meetingController.deleteMeeting(delmeeting);
+                    if (result > 0){
                         JOptionPane.showMessageDialog(rootPane, "Deleted!");
                         List<Meeting> list = meetingController.getMeetings();
                         GUIManagerClient.updateTable(list);
@@ -529,6 +664,12 @@ public class GUIManagerClient extends javax.swing.JFrame {
                         } catch (RemoteException ex) {
                             Logger.getLogger("Khong update duoc table!");
                         }
+                        this.meetingText.setText("");
+                        this.timeText.setText("HH:mm:ss");
+                        GUIManagerClient.jTable1.clearSelection();
+                        GUIManagerClient.selectReporterComboBox.removeAllItems();
+                        this.userSharedComboBox.removeAllItems();
+                        this.buttonGroup1.clearSelection();
                     } else
                         JOptionPane.showMessageDialog(rootPane, "Something's happened! Try again!");
                 }
@@ -546,8 +687,7 @@ public class GUIManagerClient extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(rootPane, "Choose a meeting first!");
         } else {
             int meetingId = Integer.parseInt(GUIManagerClient.jTable1.getValueAt(row, 0).toString().substring(3));
-            Meeting meeting = meetingController.getMeeting(meetingId);
-            if (meeting.getUserCreateId() == GUIManagerClient.user.getId() || "r".equals(permissionController.getPermission(user, meeting))){
+            if (meetingSelected.getUserCreateId() == GUIManagerClient.user.getId() || "r".equals(permissionController.getPermission(user, meetingSelected))){
                 List<Report> reports = reportController.getReports(meetingId);
                 if(reports.isEmpty()){
                     JOptionPane.showMessageDialog(rootPane, "Haven't have report yet! Generate report first!");
@@ -559,7 +699,7 @@ public class GUIManagerClient extends javax.swing.JFrame {
                 viewReport.setVisible(true);
             }
             else {
-                int creatorId = meetingController.getMeetingCreatorId(meeting);
+                int creatorId = meetingController.getMeetingCreatorId(meetingSelected);
                 User creator = userController.getUser(creatorId);
                 JOptionPane.showMessageDialog(rootPane, "You don't have permission to view report of this Meeting!\n"
                         + "Contact "+ creator.getUsername()+" to have the permission!");
@@ -570,24 +710,44 @@ public class GUIManagerClient extends javax.swing.JFrame {
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         this.meetingText.setText("");
         this.timeText.setText("HH:mm:ss");
+        GUIManagerClient.jTable1.clearSelection();
+        GUIManagerClient.selectReporterComboBox.removeAllItems();
+        this.userSharedComboBox.removeAllItems();
+        this.buttonGroup1.clearSelection();
     }//GEN-LAST:event_jButton1ActionPerformed
 
-    private void reportButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_reportButtonActionPerformed
+    private void addReporterButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addReporterButtonActionPerformed
         int row = GUIManagerClient.jTable1.getSelectedRow();
         if(row == -1){
             JOptionPane.showMessageDialog(rootPane, "Choose a meeting first!");
             return;
         }
         int meetingId = Integer.parseInt(GUIManagerClient.jTable1.getValueAt(row, 0).toString().substring(3));
-        GUIReporter.meeting = this.meetingController.getMeeting(meetingId);
-        if (GUIReporter.meeting.getUserCreateId() == GUIManagerClient.user.getId()){
-            GUIReporter guiReporter = new GUIReporter();
-            guiReporter.setVisible(true);
+        if (meetingSelected.getUserCreateId() == GUIManagerClient.user.getId()){
+            User reporter = userController.getUser(Integer.parseInt(this.selectReporterComboBox.getItemAt(this.selectReporterComboBox.getSelectedIndex()).substring(0,1)));
+            int result = meetingController.addReporter(reporter, meetingSelected);
+            if (result == 0){
+                JOptionPane.showMessageDialog(rootPane, "Failed! Try again!");
+                return;
+            } else {
+                JOptionPane.showMessageDialog(rootPane, "Success!");
+                GUIManagerClient.selectReporterComboBox.removeAllItems();
+            }
+            try {
+                remoteManagerImpl.h.updateReporterComboBox(meetingId);
+                remoteManagerImpl.h.updateReporterTable(meetingId);
+                remoteManagerImpl.h.updateUserSharedComboBox(meetingId);
+            } catch (RemoteException ex) {
+                Logger.getLogger("Khong update duoc Reporter!");
+            }
         }
         else{
             JOptionPane.showMessageDialog(rootPane, "You can not set reporter for this meeting!");
         }
-    }//GEN-LAST:event_reportButtonActionPerformed
+        
+        
+        /// new reporter
+    }//GEN-LAST:event_addReporterButtonActionPerformed
 
     private void meetingTextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_meetingTextActionPerformed
         // TODO add your handling code here:
@@ -599,29 +759,101 @@ public class GUIManagerClient extends javax.swing.JFrame {
 
     private void shareButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_shareButtonActionPerformed
         int row = GUIManagerClient.jTable1.getSelectedRow();
+        int meetingId = Integer.parseInt(GUIManagerClient.jTable1.getValueAt(row, 0).toString().substring(3));
         if(row == -1){
             JOptionPane.showMessageDialog(rootPane, "Choose a meeting first!");
             return;
         }
-        int meetingId = Integer.parseInt(GUIManagerClient.jTable1.getValueAt(row, 0).toString().substring(3));
-        Meeting meeting = meetingController.getMeeting(meetingId);
-        if (meeting.getUserCreateId() == GUIManagerClient.user.getId()){
+        if (meetingSelected.getUserCreateId() == GUIManagerClient.user.getId()){
             //create new frame with this meetingId get all user
+            User sharedUser = userController.getUser(Integer.parseInt(this.userSharedComboBox.getItemAt(this.userSharedComboBox.getSelectedIndex()).substring(0,1)));
+            String permission;
+            if (this.readOnlyRadioButton.isSelected()){
+                permission="r";
+            }
+            else if(this.writeRadioButton.isSelected()){
+                permission="w";
+            }
+            else{
+                permission=null;
+            }
+            int result = permissionController.addPermission(sharedUser, meetingSelected, permission);
+            if(result > 0){
+                JOptionPane.showMessageDialog(rootPane, "Success!");
+                List<Meeting> list = meetingController.getMeetings();
+                try {
+                    remoteManagerImpl.h.updateMeetingTable(list);
+                    remoteManagerImpl.h.updateUserSharedComboBox(meetingId);
+                } catch (RemoteException ex) {
+                    Logger.getLogger(GUIManagerClient.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                this.meetingText.setText("");
+                this.timeText.setText("HH:mm:ss");
+                GUIManagerClient.jTable1.clearSelection();
+                GUIManagerClient.selectReporterComboBox.removeAllItems();
+                this.userSharedComboBox.removeAllItems();
+                this.buttonGroup1.clearSelection();
+                GUIManagerClient.userSharedComboBox.removeAllItems();
+            }
+            else{
+                JOptionPane.showMessageDialog(rootPane, "Failed! Can not share!");
+            }
         }
         else{
             JOptionPane.showMessageDialog(rootPane, "You can not share this meeting!");
         }
     }//GEN-LAST:event_shareButtonActionPerformed
 
-    private void jRadioButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jRadioButton2ActionPerformed
+    private void writeRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_writeRadioButtonActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_jRadioButton2ActionPerformed
+    }//GEN-LAST:event_writeRadioButtonActionPerformed
 
-    private void jRadioButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jRadioButton1ActionPerformed
+    private void readOnlyRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_readOnlyRadioButtonActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_jRadioButton1ActionPerformed
+    }//GEN-LAST:event_readOnlyRadioButtonActionPerformed
+
+    private void reporterTableMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_reporterTableMousePressed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_reporterTableMousePressed
+
+    private void selectReporterComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_selectReporterComboBoxActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_selectReporterComboBoxActionPerformed
+
+    private void deleteReporterButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteReporterButtonActionPerformed
+        int meetingRow = GUIManagerClient.jTable1.getSelectedRow();
+        int meetingId = Integer.parseInt(GUIManagerClient.jTable1.getValueAt(meetingRow, 0).toString().substring(3));
+        int row = GUIManagerClient.reporterTable.getSelectedRow();
+        if (row != -1){
+            if (meetingSelected.getUserCreateId() == GUIManagerClient.user.getId()){
+                if(JOptionPane.showConfirmDialog(rootPane, "Are you sure?", "", JOptionPane.YES_NO_OPTION) == 0){
+                    int userId = Integer.parseInt(GUIManagerClient.reporterTable.getValueAt(row, 0).toString());
+                    User reporter = userController.getUser(userId);
+                    int result = meetingController.deleteReporter(reporter, meetingSelected);
+                    if (result == 0){
+                        JOptionPane.showMessageDialog(rootPane, "Failed! Try again!");
+                    }
+                    else{
+                        JOptionPane.showMessageDialog(rootPane, "Success!");
+                        GUIManagerClient.selectReporterComboBox.removeAllItems();
+                    }
+
+                    try {
+                        remoteManagerImpl.h.updateReporterComboBox(meetingId);
+                        remoteManagerImpl.h.updateReporterTable(meetingId);
+                        remoteManagerImpl.h.updateUserSharedComboBox(meetingId);
+                    } catch (RemoteException ex) {
+                        Logger.getLogger("Khong update duoc Reporter!");
+                    }
+                }
+            } else {
+                JOptionPane.showMessageDialog(rootPane, "You can not set reporter for this meeting!");
+            }
+        } else {
+            JOptionPane.showMessageDialog(rootPane, "Choose a reporter first!");
+        }
+    }//GEN-LAST:event_deleteReporterButtonActionPerformed
     class RemoteManagerImpl extends UnicastRemoteObject implements RemoteManagerInterface{
-
         public RemoteInterface h;
         public RemoteManagerImpl() throws RemoteException, NotBoundException, MalformedURLException {
             h = (RemoteInterface)Naming.lookup("remoteInterface");
@@ -629,20 +861,77 @@ public class GUIManagerClient extends javax.swing.JFrame {
         }
         @Override
         public void updateMeetingTable(List<Meeting> list) throws RemoteException {
-            List<Meeting> listHavePermission = new ArrayList<>();
-                for(Meeting m: list){
-                    String permission = permissionController.getPermission(user, m);
-                    if ("r".equals(permission) || "w".equals(permission)){
-                        listHavePermission.add(m);
-                    }
-                    int creatorId = meetingController.getMeetingCreatorId(m);
-                    if(creatorId == user.getId()){
-                        listHavePermission.add(m);
-                    }
-            }
             SwingUtilities.invokeLater(new Runnable(){
                 public void run(){
+                    List<Meeting> listHavePermission = new ArrayList<>();
+                    for(Meeting m: list){
+                        String permission = permissionController.getPermission(user, m);
+                        if ("r".equals(permission) || "w".equals(permission)){
+                            listHavePermission.add(m);
+                        }
+                        int creatorId = meetingController.getMeetingCreatorId(m);
+                        if(creatorId == user.getId()){
+                            listHavePermission.add(m);
+                        }
+                    }
                     GUIManagerClient.updateTable(listHavePermission);
+                }
+            });
+        }
+
+        @Override
+        public void updateReporterComboBox(int meetingId) throws RemoteException {
+            SwingUtilities.invokeLater(new Runnable(){
+                public void run(){
+                    if (GUIManagerClient.this.meetingSelected.getId() == meetingId){
+                        GUIManagerClient.selectReporterComboBox.removeAllItems();
+                        List<Integer> reporterIds = meetingController.getReporterIds(meetingId);
+                        List<Integer> userIds = new ArrayList<>();
+                        List<User> users = userController.getUsers();
+                        for (User u : users){
+                            userIds.add(u.getId());
+                        }
+                        userIds.removeAll(reporterIds);
+                        List<User> userComboBox = new ArrayList<>();
+                        for (int i : userIds){
+                            User u = userController.getUser(i);
+                            if("staff".equals(u.getPosition())){
+                                userComboBox.add(u);
+                            }
+                        }
+                        GUIManagerClient.updateReporterComboBox(userComboBox);
+                    }
+                }
+            });
+        }
+
+        @Override
+        public void updateReporterTable(int meetingId) throws RemoteException {
+            SwingUtilities.invokeLater(new Runnable(){
+                public void run(){
+                    if (GUIManagerClient.this.meetingSelected.getId() == meetingId){
+                        List<Integer> reporterIds = meetingController.getReporterIds(meetingId);
+                        List<User> reporters = new ArrayList<>();
+                        if (reporterIds != null){
+                            for (Integer reporterId : reporterIds){
+                                User reporterx = userController.getUser(reporterId);
+                                reporters.add(reporterx);
+                            }
+                        }
+                        GUIManagerClient.updateReporterTable(reporters);
+                    }
+                }
+            });
+        }
+        @Override
+        public void updateUserNotSharedYet(int meetingId) throws RemoteException {
+            SwingUtilities.invokeLater(new Runnable(){
+                public void run(){
+                    if (GUIManagerClient.this.meetingSelected.getId() == meetingId){
+                        GUIManagerClient.userSharedComboBox.removeAllItems();
+                        List<User> users = GUIManagerClient.this.getUserDontHavePermission(GUIManagerClient.this.meetingSelected);
+                        GUIManagerClient.updateUserSharedComboBox(users);
+                    }
                 }
             });
         }
@@ -681,27 +970,31 @@ public class GUIManagerClient extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton addMeetingButton;
+    private javax.swing.JButton addReporterButton;
     private javax.swing.ButtonGroup buttonGroup1;
     private datechooser.beans.DateChooserCombo dateChooserCombo1;
     private javax.swing.JButton deleteButton;
+    private javax.swing.JButton deleteReporterButton;
     private javax.swing.JButton editButton;
     private javax.swing.JButton jButton1;
-    private javax.swing.JComboBox<String> jComboBox1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JPanel jPanel1;
-    private javax.swing.JRadioButton jRadioButton1;
-    private javax.swing.JRadioButton jRadioButton2;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane2;
     public static javax.swing.JTable jTable1;
     private javax.swing.JButton logoutButton;
     private javax.swing.JTextField meetingText;
     private javax.swing.JLabel nameLabel;
-    private javax.swing.JButton reportButton;
+    private javax.swing.JRadioButton readOnlyRadioButton;
+    public static javax.swing.JTable reporterTable;
+    public static javax.swing.JComboBox<String> selectReporterComboBox;
     private javax.swing.JButton shareButton;
     private javax.swing.JTextField timeText;
+    public static javax.swing.JComboBox<String> userSharedComboBox;
     private javax.swing.JButton viewReportButton;
     private javax.swing.JLabel welcomeLabel;
+    private javax.swing.JRadioButton writeRadioButton;
     // End of variables declaration//GEN-END:variables
 }

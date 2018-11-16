@@ -74,10 +74,34 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
         managerClients.addElement(rm);
     }
     @Override
+    public synchronized void removeRemoteManagerInterface(RemoteManagerInterface rm) throws RemoteException{
+        managerClients.removeElement(rm);
+    }
+    @Override
     public void updateMeetingTable(List<Meeting> list) throws RemoteException{
         for (int i = 0; i < managerClients.size() ; i++){
             RemoteManagerInterface rm = (RemoteManagerInterface)managerClients.elementAt(i);
             rm.updateMeetingTable(list);
+        }
+    }
+    @Override
+    public void updateReporterComboBox(int meetingId) throws RemoteException{
+        for (int i = 0; i < managerClients.size() ; i++){
+            RemoteManagerInterface rm = (RemoteManagerInterface)managerClients.elementAt(i);
+            rm.updateReporterComboBox(meetingId);
+        }
+    }
+    public void updateUserSharedComboBox(int meetingId) throws RemoteException{
+        for (int i = 0; i < managerClients.size() ; i++){
+            RemoteManagerInterface rm = (RemoteManagerInterface)managerClients.elementAt(i);
+            rm.updateUserNotSharedYet(meetingId);
+        }
+    }
+    @Override
+    public void updateReporterTable(int meetingId) throws RemoteException{
+        for (int i = 0; i < managerClients.size() ; i++){
+            RemoteManagerInterface rm = (RemoteManagerInterface)managerClients.elementAt(i);
+            rm.updateReporterTable(meetingId);
         }
     }
 // end for callback
@@ -470,6 +494,7 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
         }
         return 0;
     }
+    
 // end RemoteImplement for meeting
 
     // Server status
@@ -596,8 +621,23 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
         }
         return out;
     }
+    @Override
+    public int deleteReportParts(int meetingId) throws RemoteException{
+        String sql = "DELETE FROM reportparts WHERE meetingId = ?;";
+        try {
+            Connection conn = ConnectDB.connectDB();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, meetingId);
+            int i = stmt.executeUpdate();
+            conn.close();
+            return i;
+        } catch (SQLException ex) {
+            Logger.getLogger(RemoteImpl.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return 0;
+    }
     // end Remote Implement for file
-    // Remote implement for report
+// Remote implement for report
     @Override
     public int addReport(Report report) throws RemoteException{
         
@@ -814,9 +854,24 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
         }
         return 0;
     }
-    // End remote implement for report
+    @Override
+    public int deleteReports(int meetingId) throws RemoteException{
+        String sql = "DELETE FROM reports WHERE meetingId = ?;";
+        try {
+            Connection conn = ConnectDB.connectDB();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, meetingId);
+            int i = stmt.executeUpdate();
+            conn.close();
+            return i;
+        } catch (SQLException ex) {
+            Logger.getLogger(RemoteImpl.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return 0;
+    }
+// End remote implement for report
     
-    // Remote implement for permission
+// Remote implement for permission
     @Override
     public String getPermission(User user, Meeting meeting) throws RemoteException{
         PreparedStatement stmt;
@@ -855,5 +910,20 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
         }
         return 0;
     }
-    //end for permission
+    @Override
+    public int deletePermission(int meetingId) throws RemoteException{
+        String sql = "DELETE FROM userpermission WHERE meetingId = ?;";
+        try {
+            Connection conn = ConnectDB.connectDB();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, meetingId);
+            int i = stmt.executeUpdate();
+            conn.close();
+            return i;
+        } catch (SQLException ex) {
+            Logger.getLogger(RemoteImpl.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return 0;
+    }
+//end for permission
 }

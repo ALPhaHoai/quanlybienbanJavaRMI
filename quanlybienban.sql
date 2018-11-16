@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Nov 13, 2018 at 02:26 PM
+-- Generation Time: Nov 16, 2018 at 05:17 PM
 -- Server version: 5.7.24-0ubuntu0.18.04.1
 -- PHP Version: 7.2.10-0ubuntu0.18.04.1
 
@@ -41,9 +41,12 @@ CREATE TABLE `meetings` (
 --
 
 INSERT INTO `meetings` (`id`, `userCreateId`, `meetingTitle`, `meetingDate`, `timeStart`) VALUES
-(1, 2, 'Hop ABC', '2018-11-21', '09:00:00'),
+(1, 2, 'Hop ve ABC', '2018-11-21', '09:00:00'),
 (3, 2, 'Hop CDE', '2018-11-13', '08:00:00'),
-(4, 2, 'Hop ve DEF', '2018-11-14', '06:00:00');
+(8, 2, 'meeting 8', '2018-11-14', '18:00:00'),
+(14, 2, 'meeting 14', '2018-11-14', '19:00:00'),
+(16, 2, 'meeting 16', '2018-11-14', '15:00:00'),
+(17, 2, 'Meeting 17', '2018-11-14', '13:00:00');
 
 -- --------------------------------------------------------
 
@@ -122,9 +125,15 @@ CREATE TABLE `userpermission` (
 --
 
 INSERT INTO `userpermission` (`id`, `userId`, `meetingId`, `permission`) VALUES
-(13, 1, 1, 'u'),
-(14, 4, 3, 'u'),
-(15, 4, 4, 'u');
+(45, 6, 14, 'r'),
+(46, 6, 16, 'r'),
+(47, 1, 17, 'r'),
+(49, 8, 14, 'r'),
+(59, 1, 14, 'u'),
+(61, 6, 17, 'r'),
+(62, 6, 8, 'w'),
+(63, 1, 3, 'u'),
+(64, 4, 3, 'r');
 
 -- --------------------------------------------------------
 
@@ -148,9 +157,9 @@ INSERT INTO `users` (`id`, `username`, `password`, `fullname`, `position`) VALUE
 (1, 'thanhdovan', '81dc9bdb52d04dc20036dbd8313ed055', 'thanh', 'staff'),
 (2, 'canhnguyenduc', '81dc9bdb52d04dc20036dbd8313ed055', 'canh', 'manager'),
 (4, 'longlengoc', '81dc9bdb52d04dc20036dbd8313ed055', 'long', 'staff'),
-(6, 'hoangtrongnguyen', '81dc9bdb52d04dc20036dbd8313ed055', 'hoang', 'manager'),
+(6, 'hoangnguyentrong', '81dc9bdb52d04dc20036dbd8313ed055', 'hoang', 'manager'),
 (7, 'tungvuduc', '81dc9bdb52d04dc20036dbd8313ed055', 'tung', 'admin'),
-(8, 'manager', 'ec6a6536ca304edf844d1d248a4f08dc', 'Ma na ger', 'manager');
+(8, 'manager', '81dc9bdb52d04dc20036dbd8313ed055', 'Manager', 'manager');
 
 --
 -- Indexes for dumped tables
@@ -189,7 +198,9 @@ ALTER TABLE `reports`
 -- Indexes for table `userpermission`
 --
 ALTER TABLE `userpermission`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fkUserId` (`userId`),
+  ADD KEY `fkMeetingId` (`meetingId`);
 
 --
 -- Indexes for table `users`
@@ -205,7 +216,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `meetings`
 --
 ALTER TABLE `meetings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT for table `peopleeditreport`
@@ -217,7 +228,7 @@ ALTER TABLE `peopleeditreport`
 -- AUTO_INCREMENT for table `reportparts`
 --
 ALTER TABLE `reportparts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `reports`
@@ -229,7 +240,7 @@ ALTER TABLE `reports`
 -- AUTO_INCREMENT for table `userpermission`
 --
 ALTER TABLE `userpermission`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=65;
 
 --
 -- AUTO_INCREMENT for table `users`
@@ -265,6 +276,13 @@ ALTER TABLE `reportparts`
 --
 ALTER TABLE `reports`
   ADD CONSTRAINT `fk_meeting_id` FOREIGN KEY (`meetingId`) REFERENCES `meetings` (`id`);
+
+--
+-- Constraints for table `userpermission`
+--
+ALTER TABLE `userpermission`
+  ADD CONSTRAINT `fkMeetingId` FOREIGN KEY (`meetingId`) REFERENCES `meetings` (`id`),
+  ADD CONSTRAINT `fkUserId` FOREIGN KEY (`userId`) REFERENCES `users` (`id`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

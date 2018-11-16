@@ -57,4 +57,7 @@ public class ReportController {
     public int removePeopleEdit(int peopleEditId){
         return reportModel.removePeopleEdit(peopleEditId);
     }
+    public int deleteReports(int meetingId){
+        return reportModel.deleteReports(meetingId);
+    }
 }

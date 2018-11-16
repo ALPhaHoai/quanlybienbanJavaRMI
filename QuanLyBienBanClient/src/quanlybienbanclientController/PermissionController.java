@@ -24,4 +24,7 @@ public class PermissionController {
     public int addPermission(User user, Meeting meeting, String permission){
         return permissionModel.addPermission(user, meeting, permission);
     }
+    public int deletePermission(int meetingId){
+        return permissionModel.deletePermission(meetingId);
+    }
 }

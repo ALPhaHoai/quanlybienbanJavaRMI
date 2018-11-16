@@ -113,4 +113,13 @@ public class ReportModel {
         }
         return 0;
     }
+    public int deleteReports(int meetingId){
+        try {
+            RemoteInterface stub = Register.registry();
+            return stub.deleteReports(meetingId);
+        } catch (RemoteException | NotBoundException ex) {
+            Logger.getLogger(ReportModel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return 0;
+    }
 }

@@ -26,7 +26,11 @@ public interface RemoteInterface extends Remote{
     public String printMsg(String msg) throws RemoteException;
     
     public void addRemoteManagerInterface(RemoteManagerInterface rm) throws RemoteException;
+    public void removeRemoteManagerInterface(RemoteManagerInterface rm) throws RemoteException;
     public void updateMeetingTable(List<Meeting> list) throws RemoteException;
+    public void updateReporterComboBox(int meetingId) throws RemoteException;
+    public void updateUserSharedComboBox(int meetingId) throws RemoteException;
+    public void updateReporterTable(int meetingId) throws RemoteException;
     // interface for user
     public List<User> getUsers() throws RemoteException;
     public User getUser(String username, String password) throws RemoteException;
@@ -55,6 +59,7 @@ public interface RemoteInterface extends Remote{
     public String getReportContent(int reportId) throws RemoteException;
     public Report getReport(int reportId) throws RemoteException;
     public int addReport(Report report) throws RemoteException;
+    public int deleteReports(int meetingId) throws RemoteException;
     //end interface for report
     
     //interface for filetext
@@ -62,6 +67,7 @@ public interface RemoteInterface extends Remote{
     public int uploadFile(ReportPart reportPart) throws RemoteException;
     public List<ReportPart> getReportParts(int type, int meetingId) throws RemoteException;
     public String getReportPartContent(int reportPartId) throws RemoteException;
+    public int deleteReportParts(int meetingId) throws RemoteException;
     //end interface for filetext
 
     public int addPeopleEdit(PeopleEditReport per) throws RemoteException;
@@ -73,6 +79,6 @@ public interface RemoteInterface extends Remote{
     // permission remote interface
     public String getPermission(User user, Meeting meeting) throws RemoteException;
     public int addPermission(User user, Meeting meeting, String permission) throws RemoteException;
-    
+    public int deletePermission(int meetingId) throws RemoteException;
     // end permission remote interface
 }

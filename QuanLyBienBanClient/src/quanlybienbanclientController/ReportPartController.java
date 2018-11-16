@@ -36,5 +36,7 @@ public class ReportPartController {
         return reportPartModel.getReportPartContent(reportPartId);
     }
     
-    
+    public int deleteReportParts(int meetingId){
+        return reportPartModel.deleteReportParts(meetingId);
+    }
 }

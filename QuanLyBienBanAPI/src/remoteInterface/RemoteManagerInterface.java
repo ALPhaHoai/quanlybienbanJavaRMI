@@ -6,6 +6,7 @@
 package remoteInterface;
 
 import entity.Meeting;
+import entity.User;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.List;
@@ -16,4 +17,7 @@ import java.util.List;
  */
 public interface RemoteManagerInterface extends Remote {
     public void updateMeetingTable(List<Meeting> list) throws RemoteException;
+    public void updateReporterComboBox(int meetingId) throws RemoteException;
+    public void updateReporterTable(int meetingId) throws RemoteException;
+    public void updateUserNotSharedYet(int meetingId) throws RemoteException;
 }
