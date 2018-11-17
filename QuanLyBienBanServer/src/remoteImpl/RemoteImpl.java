@@ -40,6 +40,8 @@ import remoteInterface.ConnectDB;
 import remoteInterface.RemoteAdminInterface;
 import remoteInterface.RemoteInterface;
 import remoteInterface.RemoteManagerInterface;
+import remoteInterface.RemoteReportInterface;
+import remoteInterface.RemoteStaffInterface;
 import remoteInterface.TestRemoteClientInterface;
 
 /**
@@ -50,10 +52,14 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
     private Vector testClients;
     private Vector managerClients;
     private Vector adminClients;
+    private Vector staffClients;
+    private Vector reportClients;
     public RemoteImpl() throws RemoteException{
         super();
         managerClients = new Vector();
         adminClients = new Vector();
+        staffClients = new Vector();
+        reportClients = new Vector();
     }
 //Remote for callback
     @Override
@@ -123,6 +129,59 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
             ra.adminUpdateUserTable(list);
         }
     }
+    
+    @Override
+    public synchronized void addRemoteStaffInterface(RemoteStaffInterface rs) throws RemoteException{
+        staffClients.addElement(rs);
+    }
+    @Override
+    public synchronized void removeRemoteStaffInterface(RemoteStaffInterface rs) throws RemoteException{
+        staffClients.removeElement(rs);
+    }
+    @Override
+    public void staffUpdateMeetingTable(List<Meeting> list) throws RemoteException{
+        for (int i = 0; i < staffClients.size() ; i++){
+            RemoteStaffInterface rs = (RemoteStaffInterface)staffClients.elementAt(i);
+            rs.updateMeetingTable(list);
+        }
+    }
+    @Override
+    public void staffUpdateReportPartTable(List<ReportPart> list, int meetingId) throws RemoteException{
+        for (int i = 0; i < staffClients.size() ; i++){
+            RemoteStaffInterface rs = (RemoteStaffInterface)staffClients.elementAt(i);
+            rs.updateReportPartTable(list, meetingId);
+        }
+    }
+    @Override
+    public void addRemoteReportInterface(RemoteReportInterface rr) throws RemoteException{
+        reportClients.addElement(rr);
+    }
+    @Override
+    public void removeRemoteReportInterface(RemoteReportInterface rr) throws RemoteException{
+        reportClients.removeElement(rr);
+    }
+    @Override
+    public void updateUserEdittingTable(List<User> list, int reportId) throws RemoteException{
+        for (int i = 0; i < reportClients.size() ; i++){
+            RemoteReportInterface rr = (RemoteReportInterface)reportClients.elementAt(i);
+            rr.updateUserEdittingTable(list, reportId);
+        }
+    }
+    @Override
+    public void updateReportTable(List<Report> list) throws RemoteException {
+        for (int i = 0; i < reportClients.size() ; i++){
+            RemoteReportInterface rr = (RemoteReportInterface)reportClients.elementAt(i);
+            rr.updateReportTable(list);
+        }
+    }
+    @Override
+    public void updateReportContent(String content, int reportId) throws RemoteException {
+        for (int i = 0; i < reportClients.size() ; i++){
+            RemoteReportInterface rr = (RemoteReportInterface)reportClients.elementAt(i);
+            rr.updateReportContent(content, reportId);
+        }
+    }
+    
 // end for callback
 
 // Remote Implement for user
@@ -660,7 +719,7 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
     @Override
     public int addReport(Report report) throws RemoteException{
         
-        String sql = "INSERT INTO reports (meetingId, reportName, reportContent, timeCreate) VALUES ( ?, ?, ?, ?);";
+        String sql = "INSERT INTO reports (meetingId, reportName, reportContent, timeCreate, authors) VALUES (?, ?, ?, ?, ?);";
         SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
         String str = sdf.format(new java.util.Date());
         try {
@@ -669,6 +728,7 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
             stmt.setInt(1, report.getMeetingId());
             stmt.setString(2, report.getReportName());
             stmt.setString(3, report.getReportContent());
+            stmt.setString(5, report.getAuthors());
             stmt.setString(4, str);
             int i = stmt.executeUpdate();
             conn.close();
@@ -694,11 +754,13 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
                 String reportName = rs.getString("reportName");
                 String reportContent = rs.getString("reportContent");
                 Time timeCreate = rs.getTime("timeCreate");
+                String authors = rs.getString("authors");
                 report.setId(id);
                 report.setMeetingId(meetingId);
                 report.setReportName(reportName);
                 report.setReportContent(reportContent);
                 report.setTimeCreate(timeCreate);
+                report.setAuthors(authors);
                 conn.close();
                 return report;
             }
@@ -727,7 +789,7 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
 
         String timeCreate = hour + ":"+minute+":"+second;
         
-        String sql = "insert into reports (meetingId, reportName, reportContent, timeCreate) values (?, ?, ?, ?);";
+        String sql = "insert into reports (meetingId, reportName, reportContent, timeCreate, authors) values (?, ?, ?, ?, ?);";
         try {
             Connection conn = ConnectDB.connectDB();
             PreparedStatement ps = conn.prepareStatement(sql);
@@ -735,6 +797,7 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
             ps.setString(2, report.getReportName());
             ps.setString(3, reportContent);
             ps.setString(4, timeCreate);
+            ps.setString(5, report.getAuthors());
             int i = ps.executeUpdate();
             conn.close();
             return i;
@@ -761,11 +824,13 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
                 String reportName = rs.getString("reportName");
                 String reportContent = rs.getString("reportContent");
                 Time timeCreate = rs.getTime("timeCreate");
+                String authors = rs.getString("authors");
                 Report report = new Report();
                 report.setId(id);
                 report.setMeetingId(meetingId);
                 report.setReportName(reportName);
                 report.setTimeCreate(timeCreate);
+                report.setAuthors(authors);
                 listReport.add(report);
             }
             conn.close();

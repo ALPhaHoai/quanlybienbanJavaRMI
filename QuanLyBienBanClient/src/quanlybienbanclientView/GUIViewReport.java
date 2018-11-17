@@ -9,13 +9,22 @@ import entity.Meeting;
 import entity.PeopleEditReport;
 import entity.Report;
 import entity.User;
+import java.net.MalformedURLException;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 import quanlybienbanclientController.ReportController;
 import quanlybienbanclientController.UserController;
+import remoteInterface.RemoteInterface;
+import remoteInterface.RemoteReportInterface;
 
 /**
  *
@@ -24,16 +33,18 @@ import quanlybienbanclientController.UserController;
 public class GUIViewReport extends javax.swing.JFrame {
     private final ReportController reportController;
     private final UserController userController;
+    private RemoteReportImpl remoteReportImpl;
     private String content;
+    Report reportSelected;
     public static User user;
     public static Meeting meeting;
     public static void updateReportTable(List<Report> list){
-        Object[] column = {"ReportId", "ReportName", "TimeCreate"};
+        Object[] column = {"ReportId", "ReportName", "TimeCreate", "Authors"};
         DefaultTableModel model = new DefaultTableModel();
         model.setColumnIdentifiers(column);
         try {
             for (Report u : list ){
-                Object[] row = {u.getId(), u.getReportName(), u.getTimeCreate()};
+                Object[] row = {u.getId(), u.getReportName(), u.getTimeCreate(), u.getAuthors()};
                 model.addRow(row);
             }
             GUIViewReport.reportTable.setModel(model);
@@ -41,12 +52,32 @@ public class GUIViewReport extends javax.swing.JFrame {
             Logger.getLogger(GUIAdminClient.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
-    
+    public static void updateUserEdittingTable(List<User> list){
+        Object[] column = {"UserId", "Username", "Position"};
+        DefaultTableModel model = new DefaultTableModel();
+        model.setColumnIdentifiers(column);
+        try {
+            for (User u : list ){
+                Object[] row = {u.getId(), u.getUsername(), u.getPosition()};
+                model.addRow(row);
+            }
+            GUIViewReport.userEdittingTable.setModel(model);
+        } catch (Exception ex) {
+            Logger.getLogger("Error! Can not update table user editting!");
+        }
+    }
+    public static void updateReportContent(String content){
+        GUIViewReport.reportContentTextArea.setText(content);
+    }
     /**
      * Creates new form GUIViewReport
      */
     public GUIViewReport() {
+        try {
+            remoteReportImpl = new RemoteReportImpl();
+        } catch (RemoteException | NotBoundException | MalformedURLException ex) {
+            Logger.getLogger("Can not init callback Object!");
+        }
         reportController = new ReportController();
         userController = new UserController();
         initComponents();
@@ -73,10 +104,11 @@ public class GUIViewReport extends javax.swing.JFrame {
         jScrollPane2 = new javax.swing.JScrollPane();
         reportTable = new javax.swing.JTable();
         jScrollPane3 = new javax.swing.JScrollPane();
-        jTextArea2 = new javax.swing.JTextArea();
-        cancelButton = new javax.swing.JButton();
-        saveButton = new javax.swing.JButton();
-        jButton2 = new javax.swing.JButton();
+        reportContentTextArea = new javax.swing.JTextArea();
+        quitEdittingButton = new javax.swing.JButton();
+        jScrollPane4 = new javax.swing.JScrollPane();
+        userEdittingTable = new javax.swing.JTable();
+        jLabel3 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         setResizable(false);
@@ -103,17 +135,14 @@ public class GUIViewReport extends javax.swing.JFrame {
 
         reportTable.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null},
-                {null, null, null},
-                {null, null, null},
-                {null, null, null}
+
             },
             new String [] {
-                "ReportId", "ReportName", "TimeCreate"
+                "ReportId", "ReportName", "TimeCreate", "Authors"
             }
         ) {
             boolean[] canEdit = new boolean [] {
-                false, false, false
+                false, false, false, false
             };
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
@@ -126,42 +155,55 @@ public class GUIViewReport extends javax.swing.JFrame {
             }
         });
         jScrollPane2.setViewportView(reportTable);
-        if (reportTable.getColumnModel().getColumnCount() > 0) {
-            reportTable.getColumnModel().getColumn(2).setHeaderValue("TimeCreate");
-        }
 
-        jTextArea2.setEditable(false);
-        jTextArea2.setColumns(20);
-        jTextArea2.setRows(5);
-        jTextArea2.addKeyListener(new java.awt.event.KeyAdapter() {
+        reportContentTextArea.setEditable(false);
+        reportContentTextArea.setColumns(20);
+        reportContentTextArea.setRows(5);
+        reportContentTextArea.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyTyped(java.awt.event.KeyEvent evt) {
+                reportContentTextAreaKeyTyped(evt);
+            }
             public void keyPressed(java.awt.event.KeyEvent evt) {
-                jTextArea2KeyPressed(evt);
+                reportContentTextAreaKeyPressed(evt);
+            }
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                reportContentTextAreaKeyReleased(evt);
             }
         });
-        jScrollPane3.setViewportView(jTextArea2);
+        jScrollPane3.setViewportView(reportContentTextArea);
 
-        cancelButton.setText("Cancel");
-        cancelButton.setEnabled(false);
-        cancelButton.addActionListener(new java.awt.event.ActionListener() {
+        quitEdittingButton.setText("Quit Editting");
+        quitEdittingButton.setEnabled(false);
+        quitEdittingButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cancelButtonActionPerformed(evt);
-            }
-        });
-
-        saveButton.setText("Save");
-        saveButton.setEnabled(false);
-        saveButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                saveButtonActionPerformed(evt);
+                quitEdittingButtonActionPerformed(evt);
             }
         });
 
-        jButton2.setText("Reload");
-        jButton2.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton2ActionPerformed(evt);
+        userEdittingTable.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "UserId", "Username"
+            }
+        ) {
+            boolean[] canEdit = new boolean [] {
+                false, false
+            };
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
             }
         });
+        userEdittingTable.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                userEdittingTableMousePressed(evt);
+            }
+        });
+        jScrollPane4.setViewportView(userEdittingTable);
+
+        jLabel3.setText("User are editting this report");
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -170,28 +212,25 @@ public class GUIViewReport extends javax.swing.JFrame {
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addComponent(editReportButton)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 56, Short.MAX_VALUE)
-                                .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 121, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 436, Short.MAX_VALUE)
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addComponent(saveButton, javax.swing.GroupLayout.PREFERRED_SIZE, 114, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(cancelButton, javax.swing.GroupLayout.PREFERRED_SIZE, 114, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 96, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                    .addComponent(jScrollPane3)
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(jLabel1)
                         .addGap(18, 18, 18)
                         .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addGap(53, 53, 53)
-                        .addComponent(jButton1)))
+                        .addComponent(jButton1))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(jScrollPane4, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                            .addComponent(jLabel3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 294, Short.MAX_VALUE)))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 96, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(338, 338, 338)
+                        .addComponent(editReportButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 67, Short.MAX_VALUE)
+                        .addComponent(quitEdittingButton)))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
@@ -203,17 +242,21 @@ public class GUIViewReport extends javax.swing.JFrame {
                     .addComponent(jLabel2)
                     .addComponent(jButton1))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 197, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel3)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 158, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 398, Short.MAX_VALUE)
-                    .addComponent(jScrollPane3))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(cancelButton)
-                    .addComponent(saveButton)
-                    .addComponent(jButton3)
-                    .addComponent(editReportButton)
-                    .addComponent(jButton2))
-                .addContainerGap())
+                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(editReportButton)
+                        .addComponent(quitEdittingButton))
+                    .addComponent(jButton3))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 340, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(96, 96, 96))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -224,7 +267,7 @@ public class GUIViewReport extends javax.swing.JFrame {
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 633, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
 
         pack();
@@ -254,91 +297,95 @@ public class GUIViewReport extends javax.swing.JFrame {
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void reportTableMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_reportTableMousePressed
-        GUIViewReport.jTextArea2.setText("");
+        GUIViewReport.reportContentTextArea.setText("");
         int row = GUIViewReport.reportTable.getSelectedRow();
         int reportId = Integer.parseInt(GUIViewReport.reportTable.getValueAt(row, 0).toString());
+        reportSelected = reportController.getReport(reportId);
         String content = reportController.getReportContent(reportId);
-        GUIViewReport.jTextArea2.append(content);
+        GUIViewReport.reportContentTextArea.append(content);
+        List<Integer> userIds = reportController.getIdOfUserEdit(reportId);
+        List<User> userEdittings = new ArrayList<>();
+        for (int i : userIds){
+            User u = userController.getUser(i);
+            userEdittings.add(u);
+        }
+        GUIViewReport.updateUserEdittingTable(userEdittings);
     }//GEN-LAST:event_reportTableMousePressed
 
     private void editReportButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_editReportButtonActionPerformed
-        content = GUIViewReport.jTextArea2.getText();
+        content = GUIViewReport.reportContentTextArea.getText();
         int row = GUIViewReport.reportTable.getSelectedRow();
         if (row != -1){
             int reportId = Integer.parseInt(GUIViewReport.reportTable.getValueAt(row, 0).toString());
+            PeopleEditReport per = new PeopleEditReport();
+            per.setUserId(user.getId());
+            per.setReportId(reportId);
+            reportController.addPeopleEdit(per);
             List<Integer> userIds = reportController.getIdOfUserEdit(reportId);
-            if (!userIds.isEmpty()){
-                if(JOptionPane.showConfirmDialog(rootPane, "Another user is editting this file! Do you wanna wait? \nYes = Wait and try again later! | No = Edit and discard all changes of others.", "", JOptionPane.YES_NO_OPTION)==0){
-                    System.out.println("Yes");
-                } else {
-                    GUIViewReport.jTextArea2.setEditable(true);
-                    GUIViewReport.reportTable.setEnabled(false);
-                    PeopleEditReport per = new PeopleEditReport();
-                    per.setUserId(user.getId());
-                    per.setReportId(reportId);
-                    reportController.addPeopleEdit(per);
-                    this.cancelButton.setEnabled(true);
-                    this.editReportButton.setEnabled(false);
-                    this.saveButton.setEnabled(true);
-                }
-            } else {
-                GUIViewReport.jTextArea2.setEditable(true);
+            List<User> userEdittings = new ArrayList<>();
+            for (int i : userIds){
+                User u = userController.getUser(i);
+                userEdittings.add(u);
+            }
+            try {
+                remoteReportImpl.h.updateUserEdittingTable(userEdittings, reportId);
+                GUIViewReport.reportContentTextArea.setEditable(true);
                 GUIViewReport.reportTable.setEnabled(false);
-                PeopleEditReport per = new PeopleEditReport();
-                per.setUserId(user.getId());
-                per.setReportId(reportId);
-                reportController.addPeopleEdit(per);
-                this.cancelButton.setEnabled(true);
                 this.editReportButton.setEnabled(false);
-                this.saveButton.setEnabled(true);
-                this.jButton2.setEnabled(false);
+                this.quitEdittingButton.setEnabled(true);
+            } catch (RemoteException ex) {
+                Logger.getLogger("Can not update User editting table!");
             }
         } else {
             JOptionPane.showMessageDialog(rootPane, "Choose a report first!");
         }
     }//GEN-LAST:event_editReportButtonActionPerformed
 
-    private void jTextArea2KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTextArea2KeyPressed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jTextArea2KeyPressed
+    private void reportContentTextAreaKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_reportContentTextAreaKeyPressed
 
-    private void cancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelButtonActionPerformed
-        GUIViewReport.jTextArea2.setEditable(false);
+    }//GEN-LAST:event_reportContentTextAreaKeyPressed
+
+    private void quitEdittingButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_quitEdittingButtonActionPerformed
+        GUIViewReport.reportContentTextArea.setEditable(false);
         GUIViewReport.reportTable.setEnabled(true);
         PeopleEditReport per = new PeopleEditReport();
         per.setUserId(user.getId());
-        int row = GUIViewReport.reportTable.getSelectedRow();
-        int reportId = Integer.parseInt(GUIViewReport.reportTable.getValueAt(row, 0).toString());
+        int reportId = reportSelected.getId();
+        List<Integer> tempuserIds = reportController.getIdOfUserEdit(reportId);
+        String author = "";
+        for (int i : tempuserIds){
+            User u = userController.getUser(i);
+            author+=u.getUsername()+", ";
+        }
         per.setReportId(reportId);
         int peopleEditId = reportController.getPeopleEdit(per);
         reportController.removePeopleEdit(peopleEditId);
         this.editReportButton.setEnabled(true);
-        this.cancelButton.setEnabled(false);
-        this.jButton2.setEnabled(true);
-        this.saveButton.setEnabled(false);
-    }//GEN-LAST:event_cancelButtonActionPerformed
-
-    private void saveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveButtonActionPerformed
-        GUIViewReport.jTextArea2.setEditable(false);
-        GUIViewReport.reportTable.setEnabled(true);
-        PeopleEditReport per = new PeopleEditReport();
-        per.setUserId(user.getId());
-        int row = GUIViewReport.reportTable.getSelectedRow();
-        int reportId = Integer.parseInt(GUIViewReport.reportTable.getValueAt(row, 0).toString());
-        per.setReportId(reportId);
-        int peopleEditId = reportController.getPeopleEdit(per);
-        reportController.removePeopleEdit(peopleEditId);
-        this.editReportButton.setEnabled(true);
-        this.cancelButton.setEnabled(false);
-        this.saveButton.setEnabled(false);
-        this.jButton2.setEnabled(true);
-        String newContent = GUIViewReport.jTextArea2.getText();
+        this.quitEdittingButton.setEnabled(false);
+        String newContent = GUIViewReport.reportContentTextArea.getText();
         if (newContent.equals(this.content)){
             JOptionPane.showMessageDialog(rootPane, "No change!");
+            List<Integer> userIds = reportController.getIdOfUserEdit(reportId);
+            List<User> userEdittings = new ArrayList<>();
+            for (int i : userIds){
+                User u = userController.getUser(i);
+                userEdittings.add(u);
+            }
+            try {
+                remoteReportImpl.h.updateUserEdittingTable(userEdittings, reportId);
+            } catch (RemoteException ex) {
+                Logger.getLogger("Can not update User editting table!");
+            }
+            GUIViewReport.reportContentTextArea.setEditable(false);
+            GUIViewReport.reportTable.setEnabled(true);
+            this.editReportButton.setEnabled(true);
+            this.quitEdittingButton.setEnabled(false);
             return;
         }
         Report report = reportController.getReport(reportId);
         report.setReportContent(newContent);
+        author = author.substring(0,author.length()-2);
+        report.setAuthors(author);
         int result = reportController.addReport(report);
         if (result == 0){
             JOptionPane.showMessageDialog(rootPane, "Failed! Try again!");
@@ -347,16 +394,84 @@ public class GUIViewReport extends javax.swing.JFrame {
         else{
             JOptionPane.showMessageDialog(rootPane, "Success!");
         }
+        List<Integer> userIds = reportController.getIdOfUserEdit(reportId);
+        List<User> userEdittings = new ArrayList<>();
+        for (int i : userIds){
+            User u = userController.getUser(i);
+            userEdittings.add(u);
+        }
         List<Report> list = reportController.getReports(GUIViewReport.meeting.getId());
-        GUIViewReport.updateReportTable(list);
-    }//GEN-LAST:event_saveButtonActionPerformed
+        try {
+            remoteReportImpl.h.updateUserEdittingTable(userEdittings, reportId);
+            remoteReportImpl.h.updateReportTable(list);
+        } catch (RemoteException ex) {
+            Logger.getLogger("Can not update User editting table!");
+        }
+        GUIViewReport.reportContentTextArea.setEditable(false);
+        GUIViewReport.reportTable.setEnabled(true);
+        this.editReportButton.setEnabled(true);
+        this.quitEdittingButton.setEnabled(false);
+    }//GEN-LAST:event_quitEdittingButtonActionPerformed
 
-    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-        List<Report> reports = reportController.getReports(meeting.getId());
-        GUIViewReport.jTextArea2.setText("");
-        GUIViewReport.updateReportTable(reports);
-    }//GEN-LAST:event_jButton2ActionPerformed
+    private void userEdittingTableMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_userEdittingTableMousePressed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_userEdittingTableMousePressed
 
+    private void reportContentTextAreaKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_reportContentTextAreaKeyTyped
+        
+    }//GEN-LAST:event_reportContentTextAreaKeyTyped
+
+    private void reportContentTextAreaKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_reportContentTextAreaKeyReleased
+        try {
+            remoteReportImpl.h.updateReportContent(GUIViewReport.reportContentTextArea.getText(), reportSelected.getId());
+        } catch (RemoteException ex) {
+            Logger.getLogger("Can not update content of report");
+        }
+    }//GEN-LAST:event_reportContentTextAreaKeyReleased
+
+    class RemoteReportImpl extends UnicastRemoteObject implements RemoteReportInterface{
+        public RemoteInterface h;
+        private Meeting meeting;
+        private Report report;
+        private User user;
+        public RemoteReportImpl() throws RemoteException, NotBoundException, MalformedURLException {
+            this.user = GUIViewReport.user;
+            this.meeting = GUIViewReport.meeting;
+            h = (RemoteInterface)Naming.lookup("remoteInterface");
+            h.addRemoteReportInterface(this);
+        }
+        @Override
+        public void updateReportTable(List<Report> list) throws RemoteException {
+            SwingUtilities.invokeLater(new Runnable(){
+                public void run(){
+                    GUIViewReport.updateReportTable(list);
+                }
+            });
+        }
+
+        @Override
+        public void updateUserEdittingTable(List<User> list, int reportId) throws RemoteException {
+            SwingUtilities.invokeLater(new Runnable(){
+                public void run(){
+                        if (GUIViewReport.this.reportSelected.getId() == reportId){
+                            GUIViewReport.updateUserEdittingTable(list);
+                        }
+                    }
+            });
+        }
+
+        @Override
+        public void updateReportContent(String content, int reportId) throws RemoteException {
+            SwingUtilities.invokeLater(new Runnable(){
+                public void run(){
+                    if (GUIViewReport.this.reportSelected.getId() == reportId){
+                        GUIViewReport.updateReportContent(content);
+                    }
+                }
+            });
+        }
+    
+    }
     /**
      * @param args the command line arguments
      */
@@ -393,18 +508,19 @@ public class GUIViewReport extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton cancelButton;
     private javax.swing.JButton editReportButton;
     private javax.swing.JButton jButton1;
-    private javax.swing.JButton jButton2;
     private javax.swing.JButton jButton3;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
-    public static javax.swing.JTextArea jTextArea2;
+    private javax.swing.JScrollPane jScrollPane4;
+    private javax.swing.JButton quitEdittingButton;
+    public static javax.swing.JTextArea reportContentTextArea;
     public static javax.swing.JTable reportTable;
-    private javax.swing.JButton saveButton;
+    public static javax.swing.JTable userEdittingTable;
     // End of variables declaration//GEN-END:variables
 }

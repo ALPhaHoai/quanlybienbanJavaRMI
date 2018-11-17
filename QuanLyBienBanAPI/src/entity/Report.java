@@ -20,7 +20,16 @@ public class Report implements Serializable{
     private List<PersonContentTime> personContentTimes;
     private String reportContent;
     private Time timeCreate;
+    private String authors;
 
+    public String getAuthors() {
+        return authors;
+    }
+
+    public void setAuthors(String authors) {
+        this.authors = authors;
+    }
+    
     public String getReportContent() {
         return reportContent;
     }

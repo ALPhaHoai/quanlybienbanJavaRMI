@@ -11,6 +11,7 @@ import entity.PersonContent;
 import entity.PersonContentTime;
 import entity.Report;
 import entity.ReportPart;
+import entity.User;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JOptionPane;
@@ -24,6 +25,7 @@ import quanlybienbanclientController.ReportPartController;
 public class GenerateReport extends javax.swing.JFrame {
     final int PERSONCONTENT=0, CONTENTTIME=1;
     public static Meeting meeting;
+    public static User user;
     private ReportPartController reportPartController;
     private ReportController reportController;
     /**
@@ -285,6 +287,7 @@ public class GenerateReport extends javax.swing.JFrame {
             report.setMeetingId(GenerateReport.meeting.getId());
             report.setReportName(this.reportNameTextField.getText());
             report.setPersonContentTimes(personContentTimes);
+            report.setAuthors(GenerateReport.user.getUsername());
             int result = reportController.generateReport(report, GenerateReport.meeting);
             if (result == 0){
                 JOptionPane.showMessageDialog(rootPane, "Failed! Try again!");
