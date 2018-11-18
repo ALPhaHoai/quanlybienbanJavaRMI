@@ -49,4 +49,14 @@ public class PermissionModel {
         }
         return 0;
     }
+    public int deletePermission(int userId, int meetingId){
+        try {
+            RemoteInterface stub = Register.registry();
+            int o = stub.deletePermission(userId, meetingId);
+            return o;
+        } catch (RemoteException | NotBoundException ex) {
+            Logger.getLogger(MeetingModel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return 0;
+    }
 }

@@ -122,4 +122,13 @@ public class ReportModel {
         }
         return 0;
     }
+    public int deleteReport(int reportId){
+        try {
+            RemoteInterface stub = Register.registry();
+            return stub.deleteReport(reportId);
+        } catch (RemoteException | NotBoundException ex) {
+            Logger.getLogger(ReportModel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return 0;
+    }
 }

@@ -1,3 +1,6 @@
 config.properties
 /QuanLyBienBanServer/dist/
 /QuanLyBienBanClient/dist/
+/QuanLyBienBanMid/nbproject/private/
+/QuanLyBienBanMid/build/
+/QuanLyBienBanMid/dist/

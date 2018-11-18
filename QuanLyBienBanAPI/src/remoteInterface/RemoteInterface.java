@@ -45,6 +45,8 @@ public interface RemoteInterface extends Remote{
     public void updateUserEdittingTable(List<User> list, int reportId) throws RemoteException;
     public void updateReportTable(List<Report> list) throws RemoteException;
     public void updateReportContent(String content, int reportId) throws RemoteException;
+    public void updatePermissionTable(List<User> list, Meeting meeting) throws RemoteException;
+    
     
     // interface for user
     public List<User> getUsers() throws RemoteException;
@@ -75,6 +77,7 @@ public interface RemoteInterface extends Remote{
     public Report getReport(int reportId) throws RemoteException;
     public int addReport(Report report) throws RemoteException;
     public int deleteReports(int meetingId) throws RemoteException;
+    public int deleteReport(int reportId) throws RemoteException;
     //end interface for report
     
     //interface for filetext
@@ -95,5 +98,6 @@ public interface RemoteInterface extends Remote{
     public String getPermission(User user, Meeting meeting) throws RemoteException;
     public int addPermission(User user, Meeting meeting, String permission) throws RemoteException;
     public int deletePermission(int meetingId) throws RemoteException;
+    public int deletePermission(int userId, int meetingId) throws RemoteException;
     // end permission remote interface
 }

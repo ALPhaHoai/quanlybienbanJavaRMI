@@ -88,10 +88,10 @@ public class GUIAdminClient extends javax.swing.JFrame {
         usernameTF = new javax.swing.JTextField();
         passwordTF = new javax.swing.JTextField();
         fullnameTF = new javax.swing.JTextField();
-        positionTF = new javax.swing.JTextField();
         clearButton = new javax.swing.JButton();
         jLabel8 = new javax.swing.JLabel();
         idTF = new javax.swing.JTextField();
+        positionComboBox = new javax.swing.JComboBox<>();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setResizable(false);
@@ -169,12 +169,6 @@ public class GUIAdminClient extends javax.swing.JFrame {
             }
         });
 
-        positionTF.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                positionTFActionPerformed(evt);
-            }
-        });
-
         clearButton.setText("Clear fields");
         clearButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -190,6 +184,8 @@ public class GUIAdminClient extends javax.swing.JFrame {
                 idTFActionPerformed(evt);
             }
         });
+
+        positionComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "admin", "manager", "staff" }));
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -218,14 +214,6 @@ public class GUIAdminClient extends javax.swing.JFrame {
                         .addGap(18, 18, 18)
                         .addComponent(deleteButton, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
-                        .addComponent(positionTF))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
-                        .addComponent(fullnameTF))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 72, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
                         .addComponent(passwordTF))
@@ -236,7 +224,15 @@ public class GUIAdminClient extends javax.swing.JFrame {
                         .addGap(18, 18, 18)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(usernameTF)
-                            .addComponent(idTF))))
+                            .addComponent(idTF)))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(18, 18, 18)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(positionComboBox, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(fullnameTF))))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
@@ -257,7 +253,7 @@ public class GUIAdminClient extends javax.swing.JFrame {
                     .addComponent(deleteButton)
                     .addComponent(addButton)
                     .addComponent(clearButton))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 23, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 21, Short.MAX_VALUE)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel8)
                     .addComponent(idTF, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -276,7 +272,7 @@ public class GUIAdminClient extends javax.swing.JFrame {
                 .addGap(18, 18, 18)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel7, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(positionTF, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(positionComboBox, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
         );
 
@@ -299,8 +295,8 @@ public class GUIAdminClient extends javax.swing.JFrame {
         String susername = this.usernameTF.getText();
         String spassword = this.passwordTF.getText();
         String sfullname = this.fullnameTF.getText();
-        String sposition = this.positionTF.getText();
-        if("".equals(susername) || "".equals(spassword) || "".equals(sfullname) || "".equals(sposition)){
+        String sposition = this.positionComboBox.getItemAt(this.positionComboBox.getSelectedIndex());
+        if("".equals(susername) || "".equals(spassword) || "".equals(sfullname)){
             JOptionPane.showMessageDialog(rootPane, "These fields are required");
             return;
         }
@@ -322,7 +318,6 @@ public class GUIAdminClient extends javax.swing.JFrame {
             this.usernameTF.setText("");
             this.passwordTF.setText("");
             this.fullnameTF.setText("");
-            this.positionTF.setText("");
         }
         else {
             JOptionPane.showMessageDialog(rootPane, "Failed! Please try again!");
@@ -334,8 +329,8 @@ public class GUIAdminClient extends javax.swing.JFrame {
             String susername = this.usernameTF.getText();
             String spassword = this.passwordTF.getText();
             String sfullname = this.fullnameTF.getText();
-            String sposition = this.positionTF.getText();
-            if("".equals(susername) || "".equals(spassword) || "".equals(sfullname) || "".equals(sposition)){
+            String sposition = this.positionComboBox.getItemAt(this.positionComboBox.getSelectedIndex());
+            if("".equals(susername) || "".equals(spassword) || "".equals(sfullname)){
                 JOptionPane.showMessageDialog(rootPane, "These fields are required");
                 return;
             }
@@ -365,7 +360,6 @@ public class GUIAdminClient extends javax.swing.JFrame {
                 this.usernameTF.setText("");
                 this.passwordTF.setText("");
                 this.fullnameTF.setText("");
-                this.positionTF.setText("");
             }
             else {
                 JOptionPane.showMessageDialog(rootPane, "Failed! Please try again!");
@@ -395,7 +389,6 @@ public class GUIAdminClient extends javax.swing.JFrame {
                     this.usernameTF.setText("");
                     this.passwordTF.setText("");
                     this.fullnameTF.setText("");
-                    this.positionTF.setText("");
                 }
                 else
                     JOptionPane.showMessageDialog(rootPane, "Something's happened! Try again!");
@@ -430,10 +423,6 @@ public class GUIAdminClient extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_usernameTFActionPerformed
 
-    private void positionTFActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_positionTFActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_positionTFActionPerformed
-
     private void userTableMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_userTableMousePressed
         int row = GUIAdminClient.userTable.getSelectedRow();
         this.idTF.setText(GUIAdminClient.userTable.getValueAt(row, 0).toString());
@@ -441,7 +430,7 @@ public class GUIAdminClient extends javax.swing.JFrame {
         this.passwordTF.setText(GUIAdminClient.userTable.getValueAt(row, 2).toString());
         this.passwdOfUserSelected = GUIAdminClient.userTable.getValueAt(row, 2).toString();
         this.fullnameTF.setText(GUIAdminClient.userTable.getValueAt(row, 3).toString());
-        this.positionTF.setText(GUIAdminClient.userTable.getValueAt(row, 4).toString());
+        this.positionComboBox.setSelectedItem(GUIAdminClient.userTable.getValueAt(row, 4).toString());
     }//GEN-LAST:event_userTableMousePressed
 
     private void clearButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearButtonActionPerformed
@@ -450,7 +439,6 @@ public class GUIAdminClient extends javax.swing.JFrame {
         this.usernameTF.setText("");
         this.passwordTF.setText("");
         this.fullnameTF.setText("");
-        this.positionTF.setText("");
     }//GEN-LAST:event_clearButtonActionPerformed
 
     private void idTFActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_idTFActionPerformed
@@ -528,7 +516,7 @@ public class GUIAdminClient extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane2;
     javax.swing.JTextField passwordTF;
-    javax.swing.JTextField positionTF;
+    private javax.swing.JComboBox<String> positionComboBox;
     public static javax.swing.JTable userTable;
     javax.swing.JTextField usernameTF;
     // End of variables declaration//GEN-END:variables

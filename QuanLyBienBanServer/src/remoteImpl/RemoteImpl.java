@@ -181,7 +181,13 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
             rr.updateReportContent(content, reportId);
         }
     }
-    
+    @Override
+    public void updatePermissionTable(List<User> list, Meeting meeting) throws RemoteException{
+        for (int i = 0; i < managerClients.size() ; i++){
+            RemoteManagerInterface rm = (RemoteManagerInterface)managerClients.elementAt(i);
+            rm.updatePermissionTable(list, meeting);
+        }
+    }
 // end for callback
 
 // Remote Implement for user
@@ -953,6 +959,22 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
         }
         return 0;
     }
+    @Override
+    public int deleteReport(int reportId) throws RemoteException{
+        String sql = "DELETE FROM reports WHERE id = ?;";
+        try {
+            Connection conn = ConnectDB.connectDB();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, reportId);
+            int i = stmt.executeUpdate();
+            conn.close();
+            return i;
+        } catch (SQLException ex) {
+            Logger.getLogger(RemoteImpl.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return 0;
+    }
+    
 // End remote implement for report
     
 // Remote implement for permission
@@ -1001,6 +1023,21 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
             Connection conn = ConnectDB.connectDB();
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setInt(1, meetingId);
+            int i = stmt.executeUpdate();
+            conn.close();
+            return i;
+        } catch (SQLException ex) {
+            Logger.getLogger(RemoteImpl.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return 0;
+    }
+    public int deletePermission(int userId, int meetingId) throws RemoteException{
+        String sql = "DELETE FROM userpermission WHERE meetingId = ? and userId = ?;";
+        try {
+            Connection conn = ConnectDB.connectDB();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, meetingId);
+            stmt.setInt(2, userId);
             int i = stmt.executeUpdate();
             conn.close();
             return i;

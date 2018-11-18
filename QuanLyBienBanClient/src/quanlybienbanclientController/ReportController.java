@@ -60,4 +60,7 @@ public class ReportController {
     public int deleteReports(int meetingId){
         return reportModel.deleteReports(meetingId);
     }
+    public int deleteReport(int reportId){
+        return reportModel.deleteReport(reportId);
+    }
 }

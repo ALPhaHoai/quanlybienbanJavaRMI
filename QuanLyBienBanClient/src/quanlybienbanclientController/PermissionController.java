@@ -27,4 +27,8 @@ public class PermissionController {
     public int deletePermission(int meetingId){
         return permissionModel.deletePermission(meetingId);
     }
+    public int deletePermission(int userId, int meetingId){
+        return permissionModel.deletePermission(userId, meetingId);
+    }
+    
 }
