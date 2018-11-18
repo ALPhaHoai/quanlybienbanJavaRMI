@@ -8,6 +8,8 @@ package quanlybienbanclientView;
 import entity.Meeting;
 import entity.Report;
 import entity.User;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
@@ -99,7 +101,7 @@ public class GUIManagerClient extends javax.swing.JFrame {
     public static void updateReporterComboBox(List<User> listReporter){
         GUIManagerClient.selectReporterComboBox.removeAll();
         for (User u : listReporter){
-            GUIManagerClient.selectReporterComboBox.addItem(u.getId()+" - "+u.getUsername()+ " - "+ u.getPosition());
+            GUIManagerClient.selectReporterComboBox.addItem(u.getId()+"-"+u.getUsername()+ "-"+ u.getPosition());
         }
     }
     public static void updateListPermission(List<User> users, Meeting meeting){
@@ -122,7 +124,7 @@ public class GUIManagerClient extends javax.swing.JFrame {
     public static void updateUserSharedComboBox(List<User> listUserDontHavePermission){
         GUIManagerClient.userSharedComboBox.removeAll();
         for (User u : listUserDontHavePermission){
-            GUIManagerClient.userSharedComboBox.addItem(u.getId()+" - "+u.getUsername()+ " - "+ u.getPosition());
+            GUIManagerClient.userSharedComboBox.addItem(u.getId()+"-"+u.getUsername()+ "-"+ u.getPosition());
         }
     }
     /**
@@ -154,6 +156,19 @@ public class GUIManagerClient extends javax.swing.JFrame {
             }
         }
         GUIManagerClient.updateTable(listHavePermission);
+        this.addWindowListener(new WindowAdapter(){
+            @Override
+            public void windowClosing(WindowEvent e)
+            {
+                try {
+                    remoteManagerImpl.h.removeRemoteManagerInterface(remoteManagerImpl);
+                } catch (RemoteException ex) {
+                    System.out.println("Can not remove remote manager interface!");
+                } finally{
+                    e.getWindow().dispose();
+                }
+            }
+        });
     }
 
     /**
@@ -813,21 +828,31 @@ public class GUIManagerClient extends javax.swing.JFrame {
         }
         int meetingId = Integer.parseInt(GUIManagerClient.jTable1.getValueAt(row, 0).toString().substring(3));
         if (meetingSelected.getUserCreateId() == GUIManagerClient.user.getId()){
-            User reporter = userController.getUser(Integer.parseInt(this.selectReporterComboBox.getItemAt(this.selectReporterComboBox.getSelectedIndex()).substring(0,1)));
+            int endPosition = GUIManagerClient.selectReporterComboBox.getItemAt(GUIManagerClient.selectReporterComboBox.getSelectedIndex()).indexOf("-");
+            String selected = GUIManagerClient.selectReporterComboBox.getItemAt(GUIManagerClient.selectReporterComboBox.getSelectedIndex()).substring(0,endPosition).replaceAll(" ","");
+            User reporter = userController.getUser(Integer.parseInt(selected));
+            String oldPermission = permissionController.getPermission(reporter, meetingSelected);
+            if("r".equals(oldPermission)){
+                permissionController.deletePermission(reporter.getId(), meetingSelected.getId());
+            }
+            else if("w".equals(oldPermission)){
+                permissionController.deletePermission(reporter.getId(), meetingSelected.getId());
+            }
             int result = meetingController.addReporter(reporter, meetingSelected);
             if (result == 0){
                 JOptionPane.showMessageDialog(rootPane, "Failed! Try again!");
                 return;
             } else {
                 JOptionPane.showMessageDialog(rootPane, "Success!");
-                GUIManagerClient.selectReporterComboBox.removeAllItems();
             }
             try {
-                remoteManagerImpl.h.updateReporterComboBox(meetingId);
-                remoteManagerImpl.h.updateReporterTable(meetingId);
+                remoteManagerImpl.h.updateReporterComboBox(meetingSelected.getId());
+                remoteManagerImpl.h.updateReporterTable(meetingSelected.getId());
                 remoteManagerImpl.h.updateUserSharedComboBox(meetingId);
                 List<Meeting> list = meetingController.getMeetings();
                 remoteManagerImpl.h.staffUpdateMeetingTable(list);
+                List<User> users = userController.getUsers();
+                remoteManagerImpl.h.updatePermissionTable(users, meetingSelected);
             } catch (RemoteException ex) {
                 Logger.getLogger("Khong update duoc Reporter!");
             }
@@ -854,7 +879,6 @@ public class GUIManagerClient extends javax.swing.JFrame {
             return;
         }
         if (meetingSelected.getUserCreateId() == GUIManagerClient.user.getId()){
-            //create new frame with this meetingId get all user
             User sharedUser = userController.getUser(Integer.parseInt(this.userSharedComboBox.getItemAt(this.userSharedComboBox.getSelectedIndex()).substring(0,1)));
             String permission;
             if (this.readOnlyRadioButton.isSelected()){
@@ -866,6 +890,10 @@ public class GUIManagerClient extends javax.swing.JFrame {
             else{
                 permission=null;
             }
+            if(permission==null){
+                JOptionPane.showMessageDialog(rootPane, "Choose permission first!");
+                return;
+            }
             int result = permissionController.addPermission(sharedUser, meetingSelected, permission);
             if(result > 0){
                 JOptionPane.showMessageDialog(rootPane, "Success!");
@@ -873,6 +901,8 @@ public class GUIManagerClient extends javax.swing.JFrame {
                 List<User> users = userController.getUsers();
                 try {
                     remoteManagerImpl.h.updateMeetingTable(list);
+                    remoteManagerImpl.h.updateReporterTable(meetingSelected.getId());
+                    remoteManagerImpl.h.updateReporterComboBox(meetingSelected.getId());
                     remoteManagerImpl.h.updateUserSharedComboBox(meetingSelected.getId());
                     remoteManagerImpl.h.staffUpdateMeetingTable(list);
                     remoteManagerImpl.h.updatePermissionTable(users, meetingSelected);
@@ -928,6 +958,8 @@ public class GUIManagerClient extends javax.swing.JFrame {
                         remoteManagerImpl.h.updateUserSharedComboBox(meetingSelected.getId());
                         List<Meeting> list = meetingController.getMeetings();
                         remoteManagerImpl.h.staffUpdateMeetingTable(list);
+                        List<User> users = userController.getUsers();
+                        remoteManagerImpl.h.updatePermissionTable(users, meetingSelected);
                     } catch (RemoteException ex) {
                         Logger.getLogger("Khong update duoc Reporter!");
                     }
@@ -953,6 +985,8 @@ public class GUIManagerClient extends javax.swing.JFrame {
                 List<User> list = userController.getUsers();
                 List<Meeting> listm = meetingController.getMeetings();
                 try {
+                    remoteManagerImpl.h.updateReporterTable(meetingSelected.getId());
+                    remoteManagerImpl.h.updateReporterComboBox(meetingSelected.getId());
                     remoteManagerImpl.h.updatePermissionTable(list, meetingSelected);
                     remoteManagerImpl.h.updateMeetingTable(listm);
                     remoteManagerImpl.h.updateUserSharedComboBox(meetingSelected.getId());
@@ -1000,11 +1034,6 @@ public class GUIManagerClient extends javax.swing.JFrame {
         public void updateReporterComboBox(int meetingId) throws RemoteException {
             SwingUtilities.invokeLater(new Runnable(){
                 public void run(){
-                    if (meetingId == 0){
-                        GUIManagerClient.selectReporterComboBox.removeAllItems();
-                        return;
-                    }
-                    
                     if (GUIManagerClient.this.meetingSelected.getId() == meetingId){
                         GUIManagerClient.selectReporterComboBox.removeAllItems();
                         List<Integer> reporterIds = meetingController.getReporterIds(meetingId);
@@ -1031,10 +1060,6 @@ public class GUIManagerClient extends javax.swing.JFrame {
         public void updateReporterTable(int meetingId) throws RemoteException {
             SwingUtilities.invokeLater(new Runnable(){
                 public void run(){
-                    if(meetingId == 0){
-                        GUIManagerClient.updateReporterTable(null);
-                    }
-                    
                     if (GUIManagerClient.this.meetingSelected.getId() == meetingId){
                         List<Integer> reporterIds = meetingController.getReporterIds(meetingId);
                         List<User> reporters = new ArrayList<>();
@@ -1053,10 +1078,6 @@ public class GUIManagerClient extends javax.swing.JFrame {
         public void updateUserNotSharedYet(int meetingId) throws RemoteException {
             SwingUtilities.invokeLater(new Runnable(){
                 public void run(){
-                    if (meetingId == 0){
-                        GUIManagerClient.userSharedComboBox.removeAllItems();
-                        return;
-                    }
                     if (GUIManagerClient.this.meetingSelected.getId() == meetingId){
                         GUIManagerClient.userSharedComboBox.removeAllItems();
                         List<User> users = GUIManagerClient.this.getUserDontHavePermission(GUIManagerClient.this.meetingSelected);
@@ -1069,9 +1090,6 @@ public class GUIManagerClient extends javax.swing.JFrame {
         public void updatePermissionTable(List<User> list, Meeting meeting) throws RemoteException{
             SwingUtilities.invokeLater(new Runnable(){
                 public void run(){
-                    if (list == null){
-                        GUIManagerClient.updateListPermission(null, meeting);
-                    }
                     if (GUIManagerClient.this.meetingSelected.getId() == meeting.getId()){
                         GUIManagerClient.updateListPermission(list, meeting);
                     }

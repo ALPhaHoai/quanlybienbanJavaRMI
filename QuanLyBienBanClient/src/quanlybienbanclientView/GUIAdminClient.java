@@ -10,6 +10,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import entity.User;
 import helpfile.EncryptPassword;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
@@ -60,6 +62,19 @@ public class GUIAdminClient extends javax.swing.JFrame {
         userController = new UserController();
         List<User> list = userController.getUsers();
         GUIAdminClient.updateTable(list);
+        this.addWindowListener(new WindowAdapter(){
+            @Override
+            public void windowClosing(WindowEvent e)
+            {
+                try {
+                    remoteAdminImpl.h.removeRemoteAdminInterface(remoteAdminImpl);
+                } catch (RemoteException ex) {
+                    System.out.println("Can not remove remote admin interface!");
+                } finally{
+                    e.getWindow().dispose();
+                }
+            }
+        });
     }
 
     /**
@@ -356,10 +371,10 @@ public class GUIAdminClient extends javax.swing.JFrame {
                 } catch (RemoteException ex) {
                     Logger.getLogger("Khong update duoc table!");
                 }
-                this.idTF.setText("");
-                this.usernameTF.setText("");
-                this.passwordTF.setText("");
-                this.fullnameTF.setText("");
+                GUIAdminClient.this.idTF.setText("");
+                GUIAdminClient.this.usernameTF.setText("");
+                GUIAdminClient.this.passwordTF.setText("");
+                GUIAdminClient.this.fullnameTF.setText("");
             }
             else {
                 JOptionPane.showMessageDialog(rootPane, "Failed! Please try again!");
@@ -425,12 +440,14 @@ public class GUIAdminClient extends javax.swing.JFrame {
 
     private void userTableMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_userTableMousePressed
         int row = GUIAdminClient.userTable.getSelectedRow();
-        this.idTF.setText(GUIAdminClient.userTable.getValueAt(row, 0).toString());
-        this.usernameTF.setText(GUIAdminClient.userTable.getValueAt(row, 1).toString());
-        this.passwordTF.setText(GUIAdminClient.userTable.getValueAt(row, 2).toString());
-        this.passwdOfUserSelected = GUIAdminClient.userTable.getValueAt(row, 2).toString();
-        this.fullnameTF.setText(GUIAdminClient.userTable.getValueAt(row, 3).toString());
-        this.positionComboBox.setSelectedItem(GUIAdminClient.userTable.getValueAt(row, 4).toString());
+        if(row!=-1){
+            this.idTF.setText(GUIAdminClient.userTable.getValueAt(row, 0).toString());
+            this.usernameTF.setText(GUIAdminClient.userTable.getValueAt(row, 1).toString());
+            this.passwordTF.setText(GUIAdminClient.userTable.getValueAt(row, 2).toString());
+            this.passwdOfUserSelected = GUIAdminClient.userTable.getValueAt(row, 2).toString();
+            this.fullnameTF.setText(GUIAdminClient.userTable.getValueAt(row, 3).toString());
+            this.positionComboBox.setSelectedItem(GUIAdminClient.userTable.getValueAt(row, 4).toString());
+        }
     }//GEN-LAST:event_userTableMousePressed
 
     private void clearButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearButtonActionPerformed

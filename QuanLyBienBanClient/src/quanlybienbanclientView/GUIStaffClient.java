@@ -9,6 +9,8 @@ import entity.Meeting;
 import entity.Report;
 import entity.ReportPart;
 import entity.User;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -106,6 +108,19 @@ public class GUIStaffClient extends javax.swing.JFrame {
         GUIStaffClient.updateMeetingTable(listHavePermission);
         GUIStaffClient.meetingTable.setAutoCreateRowSorter(true);
         GUIStaffClient.reportPartTable.setAutoCreateRowSorter(true);
+        this.addWindowListener(new WindowAdapter(){
+            @Override
+            public void windowClosing(WindowEvent e)
+            {
+                try {
+                    remoteStaffImpl.h.removeRemoteStaffInterface(remoteStaffImpl);
+                } catch (RemoteException ex) {
+                    System.out.println("Can not remove remote staff interface!");
+                } finally{
+                    e.getWindow().dispose();
+                }
+            }
+        });
     }
 
     /**
