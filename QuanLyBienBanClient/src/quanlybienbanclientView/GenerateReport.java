@@ -201,14 +201,16 @@ public class GenerateReport extends javax.swing.JFrame {
 
     private void jComboBox1ItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jComboBox1ItemStateChanged
         Object item = evt.getItem();
-        int reportPartId = Integer.parseInt(item.toString().substring(0, 1));
+        int endIndex = item.toString().indexOf("-");
+        int reportPartId = Integer.parseInt(item.toString().substring(0, endIndex).replaceAll(" ", ""));
         String reportPartContent = reportPartController.getReportPartContent(reportPartId);
         this.personContentPartTextArea.setText(reportPartContent);
     }//GEN-LAST:event_jComboBox1ItemStateChanged
 
     private void jComboBox2ItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jComboBox2ItemStateChanged
         Object item = evt.getItem();
-        int reportPartId = Integer.parseInt(item.toString().substring(0, 1));
+        int endIndex = item.toString().indexOf("-");
+        int reportPartId = Integer.parseInt(item.toString().substring(0, endIndex).replaceAll(" ", ""));
         String reportPartContent = reportPartController.getReportPartContent(reportPartId);
         this.contentTimePartTextArea.setText(reportPartContent);
     }//GEN-LAST:event_jComboBox2ItemStateChanged

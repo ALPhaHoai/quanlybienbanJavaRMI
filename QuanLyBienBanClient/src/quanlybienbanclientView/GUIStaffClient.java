@@ -9,6 +9,7 @@ import entity.Meeting;
 import entity.Report;
 import entity.ReportPart;
 import entity.User;
+import helpfile.CheckReportPart;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.BufferedInputStream;
@@ -255,6 +256,7 @@ public class GUIStaffClient extends javax.swing.JFrame {
             }
         });
 
+        jTextArea1.setEditable(false);
         jTextArea1.setColumns(20);
         jTextArea1.setRows(5);
         jScrollPane2.setViewportView(jTextArea1);
@@ -298,6 +300,7 @@ public class GUIStaffClient extends javax.swing.JFrame {
 
         jLabel5.setText("Preview File selected");
 
+        filePreviewTextArea.setEditable(false);
         filePreviewTextArea.setColumns(20);
         filePreviewTextArea.setRows(5);
         jScrollPane4.setViewportView(filePreviewTextArea);
@@ -468,7 +471,7 @@ public class GUIStaffClient extends javax.swing.JFrame {
                         char nextChar = (char) nextByte;
                         localBuffer.append(nextChar);
                     }
-                    this.jTextArea1.append(localBuffer.toString());
+                    this.jTextArea1.setText(localBuffer.toString());
                     } catch (FileNotFoundException ex) {
                     System.err.println(ex);
                 } catch (IOException ex) {
@@ -495,14 +498,24 @@ public class GUIStaffClient extends javax.swing.JFrame {
                 return;
             }
             if(JOptionPane.showConfirmDialog(rootPane, "Are you sure?","",JOptionPane.YES_NO_OPTION) == 0){
+                
                 ReportPart reportPart = new ReportPart();
                 reportPart.setMeetingId(Integer.parseInt(this.meetingIdTF.getText().substring(3)));
                 if(this.jRadioButton1.isSelected()){
                     reportPart.setType(PERSONCONTENT);
+                    if(!CheckReportPart.checkReportPart(this.jTextArea1.getText(), PERSONCONTENT))
+                    {   
+                        JOptionPane.showMessageDialog(rootPane, "Invalid PC Type");
+                        return;
+                    }
                 }
                 else
                 {
                     reportPart.setType(CONTENTTIME);
+                    if(!CheckReportPart.checkReportPart(this.jTextArea1.getText(), CONTENTTIME)){
+                        JOptionPane.showMessageDialog(rootPane, "Invalid CT Type");
+                        return;
+                    }
                 }
                 reportPart.setFileName(selectedFile.getName());
                 reportPart.setContent(selectedFile);
@@ -512,6 +525,16 @@ public class GUIStaffClient extends javax.swing.JFrame {
                     this.jTextArea1.setText("");
                     this.fileNameTextField.setText("");
                     this.buttonGroup1.clearSelection();
+                    List<ReportPart> listReportPartPC = reportPartController.getReportPartIds(0, Integer.parseInt(GUIStaffClient.meetingTable.getValueAt(row, 0).toString().substring(3)));
+                    List<ReportPart> listReportPartCT = reportPartController.getReportPartIds(1, Integer.parseInt(GUIStaffClient.meetingTable.getValueAt(row, 0).toString().substring(3)));
+                    List<ReportPart> listAllReportPart = new ArrayList<>(listReportPartPC);
+                    listAllReportPart.addAll(listReportPartCT);
+        //            GUIStaffClient.updateReportPartTable(listAllReportPart);
+                    try {
+                        remoteStaffImpl.h.staffUpdateReportPartTable(listAllReportPart, meetingId);
+                    } catch (RemoteException ex) {
+                        Logger.getLogger("Khong update duoc table!");
+                    }
                 }
                 else
                     JOptionPane.showMessageDialog(rootPane, "Failed! Try again!");

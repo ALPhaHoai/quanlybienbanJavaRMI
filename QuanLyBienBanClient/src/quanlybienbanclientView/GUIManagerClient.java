@@ -660,6 +660,7 @@ public class GUIManagerClient extends javax.swing.JFrame {
                     List<Meeting> list = meetingController.getMeetings();
                     try {
                         remoteManagerImpl.h.updateMeetingTable(list);
+                        remoteManagerImpl.h.staffUpdateMeetingTable(list);
                     } catch (RemoteException ex) {
                         Logger.getLogger("Khong update duoc table!");
                     }
@@ -765,6 +766,7 @@ public class GUIManagerClient extends javax.swing.JFrame {
                         GUIManagerClient.updateTable(list);
                         try {
                             remoteManagerImpl.h.updateMeetingTable(list);
+                            remoteManagerImpl.h.staffUpdateMeetingTable(list);
                         } catch (RemoteException ex) {
                             Logger.getLogger("Khong update duoc table!");
                         }
