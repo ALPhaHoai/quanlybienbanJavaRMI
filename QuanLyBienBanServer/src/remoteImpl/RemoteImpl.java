@@ -129,7 +129,6 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
             ra.adminUpdateUserTable(list);
         }
     }
-    
     @Override
     public synchronized void addRemoteStaffInterface(RemoteStaffInterface rs) throws RemoteException{
         staffClients.addElement(rs);
@@ -146,18 +145,25 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
         }
     }
     @Override
-    public void staffUpdateReportPartTable(List<ReportPart> list, int meetingId) throws RemoteException{
+    public void staffUpdateReportPartTable(List<ReportPart> list, int meetingId, String userUpload) throws RemoteException{
         for (int i = 0; i < staffClients.size() ; i++){
             RemoteStaffInterface rs = (RemoteStaffInterface)staffClients.elementAt(i);
-            rs.updateReportPartTable(list, meetingId);
+            rs.updateReportPartTable(list, meetingId, userUpload);
         }
     }
     @Override
-    public void addRemoteReportInterface(RemoteReportInterface rr) throws RemoteException{
+    public void updateStatus(int meetingId, int stat) throws RemoteException{
+        for (int i = 0; i < staffClients.size() ; i++){
+            RemoteStaffInterface rs = (RemoteStaffInterface)staffClients.elementAt(i);
+            rs.updateStatus(meetingId, stat);
+        }
+    }
+    @Override
+    public synchronized void addRemoteReportInterface(RemoteReportInterface rr) throws RemoteException{
         reportClients.addElement(rr);
     }
     @Override
-    public void removeRemoteReportInterface(RemoteReportInterface rr) throws RemoteException{
+    public synchronized void removeRemoteReportInterface(RemoteReportInterface rr) throws RemoteException{
         reportClients.removeElement(rr);
     }
     @Override
@@ -193,7 +199,6 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
 // Remote Implement for user
     @Override
     public List<User> getUsers() throws RemoteException {
-        GUIServer.jTextArea1.append("Load user list . . .\n");
         List<User> users = new ArrayList<>();
         Statement stmt;
         String sql = "select * from users";
@@ -221,7 +226,6 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
             }
             rs.close();
             conn.close();
-            GUIServer.jTextArea1.append("Load user list done! \n");
             return users;
         } catch (SQLException ex) {
             Logger.getLogger(RemoteImpl.class.getName()).log(Level.SEVERE, null, ex);
@@ -231,7 +235,6 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
     @Override
     public User getUser(String username, String password) throws RemoteException {
         User user = new User();
-        System.out.println("Creating statement...");        
         String sql = "select * from users where username = ? and password = ?";
         try {
             Connection conn = ConnectDB.connectDB();
@@ -248,9 +251,6 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
                 user.setId(id);
                 user.setUsername(username);
                 user.setPassword(password);
-                System.out.println("System get username: " + user.getUsername() + " for login!");
-                GUIServer.jTextArea1.append("A client with username: " + user.getUsername() + " logged in! \n");
-                System.out.println(GUIServer.jTextArea1.getText());
                 user.setFullname(fullname);
                 user.setPosition(position);
                 rs.close();
@@ -266,19 +266,12 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
     }
     @Override
     public int addUser(User user) throws RemoteException {
-        GUIServer.jTextArea1.append("Adding user with \n"
-                + "username:"+ user.getUsername() + "\n"
-                + "password:"+ user.getPassword() + "\n"
-                + "fullname:"+ user.getFullname()+"\n "
-                + "position:"+ user.getPosition()+"\n. . .");
-        System.out.println("Creating statement...");
         String sql = "INSERT INTO users (username, password, fullname, position) VALUES "
                 +"('"+ user.getUsername() +"' ,'"+user.getPassword() + "', '"+ user.getFullname()+"', '"+user.getPosition()+"');";
         try {
             Connection conn = ConnectDB.connectDB();
             Statement stmt = conn.createStatement();
             int i = stmt.executeUpdate(sql);
-            GUIServer.jTextArea1.append("Adding done!\n");
             conn.close();
             return i;
         } catch (SQLException ex) {
@@ -289,7 +282,6 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
     @Override
     public User getUser(int id) throws RemoteException {
         User user = new User();
-        System.out.println("Creating statement...");        
         String sql = "select * from users where id = ?";
         try {
             Connection conn = ConnectDB.connectDB();
@@ -319,7 +311,6 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
     }
     @Override
     public int editUser(User user) throws RemoteException {
-        System.out.println("Creating statement...");
         String sql = "update users set username = ?, password = ?, fullname = ?, position = ? where id = ?;";
         try {
             Connection conn = ConnectDB.connectDB();
@@ -329,9 +320,7 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
             stmt.setString(3, user.getFullname());
             stmt.setString(4, user.getPosition());
             stmt.setInt(5, user.getId());
-            System.out.println(stmt);
             int i = stmt.executeUpdate();
-            GUIServer.jTextArea1.append("Edited user " +user.getUsername()+ "!\n");
             conn.close();
             return i;
         } catch (SQLException ex) {
@@ -341,15 +330,12 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
     }
     @Override
     public int deleteUser(User user) throws RemoteException {
-        System.out.println("Creating statement...");
         String sql = "DELETE FROM users WHERE users.id = ?;";
         try {
             Connection conn = ConnectDB.connectDB();
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setInt(1, user.getId());
-            System.out.println(stmt);
             int i = stmt.executeUpdate();
-            GUIServer.jTextArea1.append("Deleted user "+ user.getUsername() +"!\n");
             conn.close();
             return i;
         } catch (SQLException ex) {
@@ -362,10 +348,8 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
 // Remote Implement for Meeting
     @Override
     public List<Meeting> getMeetings() throws RemoteException {
-        GUIServer.jTextArea1.append("Load meeting list . . .\n");
         List<Meeting> list = new ArrayList<>();
         Statement stmt;
-        System.out.println("Creating statement...");
         String sql = "select * from meetings";
         ResultSet rs;
         try {
@@ -378,46 +362,33 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
                 String title = rs.getString("meetingTitle");
                 Date date = rs.getDate("meetingDate");
                 String time = rs.getString("timeStart");
-                DateFormat formatter = new SimpleDateFormat("HH:mm");
-                Time timeValue = new java.sql.Time(formatter.parse(time).getTime());
                 // Setting the values
                 Meeting meeting = new Meeting();
                 meeting.setId(id);
                 meeting.setTitle(title);
                 meeting.setDate(date);
-                meeting.setTimeStart(timeValue);
+                meeting.setTimeStart(time);
                 list.add(meeting);
             }
         rs.close();
         conn.close();
-        GUIServer.jTextArea1.append("Load meeting list done! \n");
         return list;
         } catch (SQLException ex) {
-            Logger.getLogger(RemoteImpl.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (ParseException ex) {
             Logger.getLogger(RemoteImpl.class.getName()).log(Level.SEVERE, null, ex);
         }
         return list;
     }
     @Override
-    public int addMeeting(Meeting meeting) throws RemoteException {
-        
-        GUIServer.jTextArea1.append("Adding new meeting:"
-                + "title: " + meeting.getTitle() + "\n"
-                + "date: " + meeting.getDate() + "\n"
-                + "time: " + meeting.getTimeStart() + "\n. . .");
+    public int addMeeting(Meeting meeting) throws RemoteException {     
         String sql = "INSERT INTO meetings (meetingTitle, meetingDate, timeStart, userCreateId) VALUES (?, ?, ?, ?);";
-        System.out.println(sql);
         try {
             Connection conn = ConnectDB.connectDB();
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setString(1, meeting.getTitle());
             stmt.setDate(2, meeting.getDate());
-            stmt.setString(3, meeting.getTimeStart().toString());
+            stmt.setString(3, meeting.getTimeStart());
             stmt.setInt(4, meeting.getUserCreateId());
-            System.out.println(stmt);
             int o = stmt.executeUpdate();
-            GUIServer.jTextArea1.append("Adding done! \n");
             conn.close();
             return o;
         } catch (SQLException ex) {
@@ -435,10 +406,9 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setString(1, meeting.getTitle());
             stmt.setDate(2, meeting.getDate());
-            stmt.setString(3, meeting.getTimeStart().toString());
+            stmt.setString(3, meeting.getTimeStart());
             stmt.setInt(4, meeting.getId());
             int i = stmt.executeUpdate();
-            GUIServer.jTextArea1.append("Editted meeting "+ meeting.getTitle() +"! \n");
             conn.close();
             return i;
         } catch (SQLException ex) {
@@ -447,9 +417,27 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
         return 0;
     }
     @Override
+    public int getMeetingId(int reportId) throws RemoteException{
+        String sql = "select * from reports where id = ?";
+        try {
+            Connection conn = ConnectDB.connectDB();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, reportId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()){
+                // Retrieve by column name
+                int id  = rs.getInt("meetingId");
+                conn.close();
+                return id;
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(RemoteImpl.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return 0;
+    }
+    @Override
     public Meeting getMeeting(int meetingId) throws RemoteException {
         Meeting meeting = new Meeting();
-        System.out.println("Creating statement...");        
         String sql = "select * from meetings where id = ?";
         try {
             Connection conn = ConnectDB.connectDB();
@@ -463,21 +451,17 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
                 int userCreateId = rs.getInt("userCreateId");
                 Date date = rs.getDate("meetingDate");
                 String time = rs.getString("timeStart");
-                DateFormat formatter = new SimpleDateFormat("HH:mm");
-                Time timeValue = new java.sql.Time(formatter.parse(time).getTime());
                 // Setting the values
                 meeting.setId(id);
                 meeting.setUserCreateId(userCreateId);
                 meeting.setTitle(title);
                 meeting.setDate(date);
-                meeting.setTimeStart(timeValue);
+                meeting.setTimeStart(time);
                 
                 conn.close();
                 return meeting;
             }
         } catch (SQLException ex) {
-            Logger.getLogger(RemoteImpl.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (ParseException ex) { 
             Logger.getLogger(RemoteImpl.class.getName()).log(Level.SEVERE, null, ex);
         }
         return meeting;
@@ -491,7 +475,6 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setInt(1, meeting.getId());
             int i = stmt.executeUpdate();
-            GUIServer.jTextArea1.append("Deleted meeting "+ meeting.getTitle() +"! \n");
             conn.close();
             return i;
         } catch (SQLException ex) {
@@ -560,7 +543,6 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
     @Override
     public int getMeetingCreatorId(Meeting meeting) throws RemoteException{
         
-        System.out.println("Creating statement...");        
         String sql = "select * from meetings where id = ?";
         try {
             Connection conn = ConnectDB.connectDB();
@@ -577,23 +559,18 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
             Logger.getLogger(RemoteImpl.class.getName()).log(Level.SEVERE, null, ex);
         }
         return 0;
-    }
-    
+    }   
 // end RemoteImplement for meeting
 
     // Server status
     @Override
     public void clientLogoutMessage(User user) throws RemoteException {
-        System.out.println("Client " + user.getUsername() + " logged out!");
         GUIServer.jTextArea1.append("Client " + user.getUsername() + " logged out! \n");
     }
-    
-    // Remote Implement for file
+// Remote Implement for file
     @Override
     public int uploadFile(ReportPart reportPart) throws RemoteException{
-        
         String content = "";
-        //
         BufferedInputStream bufferedStream;
         try {
             bufferedStream = new BufferedInputStream(new FileInputStream(reportPart.getContent()));
@@ -618,7 +595,6 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
             stmt.setInt(3, reportPart.getType());
             stmt.setString(4, content);
             int i = stmt.executeUpdate();
-            GUIServer.jTextArea1.append("Uploaded file to MID"+ reportPart.getMeetingId() +"! \n");
             conn.close();
             return i;
         } catch (SQLException ex) {
@@ -646,10 +622,8 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
     @Override
     public List<ReportPart> getReportParts(int i, int y) throws RemoteException {
         final int PERSONCONTENT = 0, CONTENTTIME=1;
-        GUIServer.jTextArea1.append("Load reportpart list . . .\n");
         List<ReportPart> list = new ArrayList<>();
         PreparedStatement stmt;
-        System.out.println("Creating statement...");
         String sql = "select * from reportparts where type = ? and meetingId = ?";
         ResultSet rs;
         try {
@@ -675,7 +649,6 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
         }
         rs.close();
         conn.close();
-        GUIServer.jTextArea1.append("Load reportpart list done! \n");
         return list;
         } catch (SQLException ex) {
             Logger.getLogger(RemoteImpl.class.getName()).log(Level.SEVERE, null, ex);
@@ -692,7 +665,6 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
             Connection conn = ConnectDB.connectDB();
             stmt = conn.prepareStatement(sql);
             stmt.setInt(1, reportPartId);
-            System.out.println(stmt);
             ResultSet rs = stmt.executeQuery();
             if(rs.next()){
                 out = rs.getString("reportPartContent");
@@ -726,8 +698,11 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
     public int addReport(Report report) throws RemoteException{
         
         String sql = "INSERT INTO reports (meetingId, reportName, reportContent, timeCreate, authors) VALUES (?, ?, ?, ?, ?);";
-        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
-        String str = sdf.format(new java.util.Date());
+       
+        //Co_the_sai_khi_test_2_may
+        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+	java.util.Date date = new java.util.Date();
+        String timeCreate = dateFormat.format(date);
         try {
             Connection conn = ConnectDB.connectDB();
             PreparedStatement stmt = conn.prepareStatement(sql);
@@ -735,7 +710,7 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
             stmt.setString(2, report.getReportName());
             stmt.setString(3, report.getReportContent());
             stmt.setString(5, report.getAuthors());
-            stmt.setString(4, str);
+            stmt.setString(4, timeCreate);
             int i = stmt.executeUpdate();
             conn.close();
             return i;
@@ -759,7 +734,7 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
                 int meetingId = rs.getInt("meetingId");
                 String reportName = rs.getString("reportName");
                 String reportContent = rs.getString("reportContent");
-                Time timeCreate = rs.getTime("timeCreate");
+                String timeCreate = rs.getString("timeCreate");
                 String authors = rs.getString("authors");
                 report.setId(id);
                 report.setMeetingId(meetingId);
@@ -778,22 +753,15 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
     }
     @Override
     public int generateReport(Report report, Meeting meeting) throws RemoteException {
-        String reportContent = "Bien Ban Cuoc Hop "+ meeting.getTitle() + "\n\n";
-        reportContent += "Thanh vien tham gia: ";
-        for (PersonContentTime pct: report.getPersonContentTimes()){
-            reportContent += "\n+ "+ pct.getName();
-        }
-        reportContent += "\n\nNoi dung cuoc hop:\n";
+        String reportContent = "";
         Collections.sort(report.getPersonContentTimes());
         for (PersonContentTime pct: report.getPersonContentTimes()){
-            reportContent += "[ "+ pct.getTimeBegin() +" ~ "+ pct.getTimeEnd() +" ] "+pct.getName()+" - "+ pct.getContent() +"\n";
+            reportContent += "["+ pct.getTimeBegin() +"~"+ pct.getTimeEnd() +"]"+pct.getName()+"-"+ pct.getContent() +"\n";
         }
-        Calendar cal = new GregorianCalendar();
-        int second = cal.get(Calendar.SECOND);
-        int minute = cal.get(Calendar.MINUTE);
-        int hour = cal.get(Calendar.HOUR);
-
-        String timeCreate = hour + ":"+minute+":"+second;
+        //Co_the_sai_khi_test_2_may
+        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+	java.util.Date date = new java.util.Date();
+        String timeCreate = dateFormat.format(date);
         
         String sql = "insert into reports (meetingId, reportName, reportContent, timeCreate, authors) values (?, ?, ?, ?, ?);";
         try {
@@ -822,20 +790,19 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
             Connection conn = ConnectDB.connectDB();
             stmt = conn.prepareStatement(sql);
             stmt.setInt(1, meetingId);
-            System.out.println(stmt);
             ResultSet rs = stmt.executeQuery();
             while(rs.next()){
                 
                 int id = rs.getInt("id");
                 String reportName = rs.getString("reportName");
                 String reportContent = rs.getString("reportContent");
-                Time timeCreate = rs.getTime("timeCreate");
+                String time = rs.getString("timeCreate");
                 String authors = rs.getString("authors");
                 Report report = new Report();
                 report.setId(id);
                 report.setMeetingId(meetingId);
                 report.setReportName(reportName);
-                report.setTimeCreate(timeCreate);
+                report.setTimeCreate(time);
                 report.setAuthors(authors);
                 listReport.add(report);
             }
@@ -855,7 +822,6 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
             Connection conn = ConnectDB.connectDB();
             stmt = conn.prepareStatement(sql);
             stmt.setInt(1, reportId);
-            System.out.println(stmt);
             ResultSet rs = stmt.executeQuery();
             if(rs.next()){
                 out = rs.getString("reportContent");
@@ -871,7 +837,6 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
     @Override
     public int addPeopleEdit(PeopleEditReport per) throws RemoteException {
         String sql = "INSERT INTO peopleeditreport (reportId, userId) VALUES ( ?, ?);";
-        System.out.println(sql);
         try {
             Connection conn = ConnectDB.connectDB();
             PreparedStatement stmt = conn.prepareStatement(sql);
@@ -915,7 +880,6 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
             stmt = conn.prepareStatement(sql);
             stmt.setInt(1, per.getReportId());
             stmt.setInt(2, per.getUserId());
-            System.out.println(stmt);
             ResultSet rs = stmt.executeQuery();
             if(rs.next()){
                 out = rs.getInt("id");
@@ -1031,6 +995,7 @@ public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
         }
         return 0;
     }
+    @Override
     public int deletePermission(int userId, int meetingId) throws RemoteException{
         String sql = "DELETE FROM userpermission WHERE meetingId = ? and userId = ?;";
         try {

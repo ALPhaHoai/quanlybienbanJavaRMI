@@ -9,37 +9,39 @@ import entity.Meeting;
 import entity.PeopleEditReport;
 import entity.Report;
 import entity.User;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.net.MalformedURLException;
-import java.rmi.Naming;
-import java.rmi.NotBoundException;
-import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
-import javax.swing.table.DefaultTableModel;
 import quanlybienbanclientController.PermissionController;
 import quanlybienbanclientController.ReportController;
 import quanlybienbanclientController.UserController;
 import remoteInterface.RemoteInterface;
 import remoteInterface.RemoteReportInterface;
 
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.net.MalformedURLException;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.TimerTask;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import registry.Register;
+
+
 /**
  *
  * @author thanhdovan
  */
 public class GUIViewReport extends javax.swing.JFrame {
-    int caretpos;
     private final PermissionController permissionController;
     private final ReportController reportController;
     private final UserController userController;
     private RemoteReportImpl remoteReportImpl;
     private String content;
+    private String selectedContent;
     Report reportSelected;
     public static User user;
     public static Meeting meeting;
@@ -158,6 +160,7 @@ public class GUIViewReport extends javax.swing.JFrame {
         deleteReportButton = new javax.swing.JButton();
         jLabel6 = new javax.swing.JLabel();
         jLabel7 = new javax.swing.JLabel();
+        jLabel8 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setResizable(false);
@@ -174,6 +177,11 @@ public class GUIViewReport extends javax.swing.JFrame {
         });
 
         jButton3.setText("Export");
+        jButton3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton3ActionPerformed(evt);
+            }
+        });
 
         reportTable.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -276,18 +284,20 @@ public class GUIViewReport extends javax.swing.JFrame {
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addGroup(jPanel1Layout.createSequentialGroup()
-                                        .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 96, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                        .addComponent(deleteReportButton))
-                                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 416, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addGap(18, 18, 18))
+                                .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 96, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(deleteReportButton))
                             .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addComponent(jLabel1)
-                                .addGap(18, 18, 18)
-                                .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)))
+                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                    .addGroup(jPanel1Layout.createSequentialGroup()
+                                        .addComponent(jLabel1)
+                                        .addGap(18, 18, 18)
+                                        .addComponent(jLabel2)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                        .addComponent(jLabel8, javax.swing.GroupLayout.PREFERRED_SIZE, 82, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 416, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(0, 0, Short.MAX_VALUE)))
+                        .addGap(18, 18, 18)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addGroup(jPanel1Layout.createSequentialGroup()
                                 .addComponent(jLabel6)
@@ -314,7 +324,8 @@ public class GUIViewReport extends javax.swing.JFrame {
                     .addComponent(jLabel1)
                     .addComponent(jLabel2)
                     .addComponent(jLabel6)
-                    .addComponent(jLabel7))
+                    .addComponent(jLabel7)
+                    .addComponent(jLabel8, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
@@ -335,7 +346,7 @@ public class GUIViewReport extends javax.swing.JFrame {
                         .addComponent(quitEdittingButton)
                         .addComponent(deleteReportButton))
                     .addComponent(jButton3))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 340, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(96, 96, 96))
         );
@@ -363,6 +374,8 @@ public class GUIViewReport extends javax.swing.JFrame {
             this.jLabel5.setText(GUIViewReport.reportTable.getValueAt(row, 0).toString());
             reportSelected = reportController.getReport(reportId);
             String newcontent = reportController.getReportContent(reportId);
+            selectedContent = newcontent;
+            content = newcontent;
             GUIViewReport.reportContentTextArea.append(newcontent);
             List<Integer> userIds = reportController.getIdOfUserEdit(reportId);
             List<User> userEdittings = new ArrayList<>();
@@ -379,6 +392,11 @@ public class GUIViewReport extends javax.swing.JFrame {
         content = GUIViewReport.reportContentTextArea.getText();
         if (row != -1){
             int reportId = Integer.parseInt(GUIViewReport.reportTable.getValueAt(row, 0).toString());
+            List<Integer> checkUserIds = reportController.getIdOfUserEdit(reportId);
+            if(!checkUserIds.isEmpty()){
+                JOptionPane.showMessageDialog(rootPane, "Someone is editting this report! Can not access!");
+                return;
+            }
             if (GUIViewReport.user.getId()==GUIViewReport.meeting.getUserCreateId()||"w".equals(permissionController.getPermission(user, meeting))||"u".equals(permissionController.getPermission(user, meeting))){    
                 PeopleEditReport per = new PeopleEditReport();
                 per.setUserId(user.getId());
@@ -434,7 +452,7 @@ public class GUIViewReport extends javax.swing.JFrame {
         this.editReportButton.setEnabled(true);
         this.quitEdittingButton.setEnabled(false);
         String newContent = GUIViewReport.reportContentTextArea.getText();
-        if (newContent.equals(this.content)){
+        if (newContent.equals(this.selectedContent)){
             JOptionPane.showMessageDialog(rootPane, "No change!");
             List<Integer> userIds = reportController.getIdOfUserEdit(reportId);
             List<User> userEdittings = new ArrayList<>();
@@ -494,9 +512,11 @@ public class GUIViewReport extends javax.swing.JFrame {
 
     private void reportContentTextAreaKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_reportContentTextAreaKeyReleased
         try {
-            this.caretpos = GUIViewReport.reportContentTextArea.getCaretPosition();
-            updateStatus(caretpos);
-            remoteReportImpl.h.updateReportContent(GUIViewReport.reportContentTextArea.getText(), reportSelected.getId());
+            String newcontent = GUIViewReport.reportContentTextArea.getText();
+            if (newcontent.length() - content.length() != 0){
+                content = newcontent;
+                remoteReportImpl.h.updateReportContent(newcontent, reportSelected.getId());
+            }
         } catch (RemoteException ex) {
             Logger.getLogger("Can not update content of report");
         }
@@ -530,9 +550,27 @@ public class GUIViewReport extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_deleteReportButtonActionPerformed
 
-    private void updateStatus(int caretpos) {
-        System.out.println("caret: " + caretpos);
+    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
+        if (reportSelected == null) {
+            JOptionPane.showMessageDialog(null, "Select a report first!");
+            return;
+        }
+        List<Integer> userIds = reportController.getIdOfUserEdit(reportSelected.getId());
+        if (!userIds.isEmpty()){
+            JOptionPane.showMessageDialog(null, "Someone editting this! Cannot export!");
+            return;
+        }
+        exportToWord();
+    }//GEN-LAST:event_jButton3ActionPerformed
+
+    private void exportToWord() {
+        if (reportSelected == null) {
+            JOptionPane.showMessageDialog(null, "Select a report first!");
+        } else if (JOptionPane.showConfirmDialog(rootPane, "Are you sure?", "", JOptionPane.YES_NO_OPTION) == 0) {
+            reportController.exportReportToWord(reportSelected.getId());
+        }
     }
+    
     class RemoteReportImpl extends UnicastRemoteObject implements RemoteReportInterface{
         public RemoteInterface h;
         private Meeting meeting;
@@ -541,7 +579,7 @@ public class GUIViewReport extends javax.swing.JFrame {
         public RemoteReportImpl() throws RemoteException, NotBoundException, MalformedURLException {
             this.user = GUIViewReport.user;
             this.meeting = GUIViewReport.meeting;
-            h = (RemoteInterface)Naming.lookup("remoteInterface");
+            h = Register.registry();
             h.addRemoteReportInterface(this);
         }
         @Override
@@ -549,6 +587,14 @@ public class GUIViewReport extends javax.swing.JFrame {
             SwingUtilities.invokeLater(new Runnable(){
                 public void run(){
                     GUIViewReport.updateReportTable(list);
+                    GUIViewReport.this.jLabel8.setText("Updated!");
+                    java.util.Timer timer = new java.util.Timer();
+                    timer.schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+                            GUIViewReport.this.jLabel8.setText("");
+                        }
+                    }, 3000);
                 }
             });
         }
@@ -567,10 +613,9 @@ public class GUIViewReport extends javax.swing.JFrame {
         @Override
         public void updateReportContent(String content, int reportId) throws RemoteException {
             SwingUtilities.invokeLater(new Runnable(){
-                public void run(){
+                public void run() {
                     if (GUIViewReport.this.reportSelected.getId() == reportId){
                         GUIViewReport.updateReportContent(content);
-                        GUIViewReport.reportContentTextArea.setCaretPosition(GUIViewReport.this.caretpos);
                     }
                 }
             });
@@ -623,6 +668,7 @@ public class GUIViewReport extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
+    private javax.swing.JLabel jLabel8;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;

@@ -7,7 +7,6 @@ package entity;
 
 import java.io.Serializable;
 import java.sql.Date;
-import java.sql.Time;
 
 /**
  *
@@ -17,7 +16,7 @@ public class Meeting implements Serializable{
     private int id;
     private String title;
     private Date date;
-    private Time timeStart;
+    private String timeStart;
     private int userCreateId;
     public Meeting() {
     }
@@ -39,7 +38,7 @@ public class Meeting implements Serializable{
         this.date = date;
     }
 
-    public void setTimeStart(Time timeStart) {
+    public void setTimeStart(String timeStart) {
         this.timeStart = timeStart;
     }
     //end setter
@@ -61,7 +60,7 @@ public class Meeting implements Serializable{
         return date;
     }
 
-    public Time getTimeStart() {
+    public String getTimeStart() {
         return timeStart;
     }
     //end getter

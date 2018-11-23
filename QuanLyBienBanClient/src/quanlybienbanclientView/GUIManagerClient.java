@@ -11,15 +11,10 @@ import entity.User;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.net.MalformedURLException;
-import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Date;
-import java.sql.Time;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
@@ -642,18 +637,11 @@ public class GUIManagerClient extends javax.swing.JFrame {
                     JOptionPane.showMessageDialog(rootPane, "These fields are required");
                     return;
                 }
-                DateFormat formatter = new SimpleDateFormat("HH:mm");
-                Time timeValue = null;
-                try {
-                    timeValue = new java.sql.Time(formatter.parse(timeStart).getTime());
-                } catch (ParseException ex) {
-                    Logger.getLogger(GUIManagerClient.class.getName()).log(Level.SEVERE, null, ex);
-                }
                 Meeting meetingx = new Meeting();
                 meetingx.setId(Integer.parseInt(GUIManagerClient.jTable1.getValueAt(GUIManagerClient.jTable1.getSelectedRow(), 0).toString().substring(3)));
                 meetingx.setTitle(title);
                 meetingx.setDate(sqlDate);
-                meetingx.setTimeStart(timeValue);
+                meetingx.setTimeStart(timeStart);
                 int i = meetingController.editMeeting(meetingx);
                 if (i > 0){
                     JOptionPane.showMessageDialog(rootPane, "Success!");
@@ -664,6 +652,7 @@ public class GUIManagerClient extends javax.swing.JFrame {
                     } catch (RemoteException ex) {
                         Logger.getLogger("Khong update duoc table!");
                     }
+                    this.jLabel5.setText("");
                     this.meetingText.setText("");
                     this.timeText.setText("HH:mm:ss");
                     GUIManagerClient.jTable1.clearSelection();
@@ -680,10 +669,6 @@ public class GUIManagerClient extends javax.swing.JFrame {
     }//GEN-LAST:event_editButtonActionPerformed
 
     private void addMeetingButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addMeetingButtonActionPerformed
-        if(GUIManagerClient.jTable1.getSelectedRow() == -1){
-            JOptionPane.showMessageDialog(rootPane, "Choose a meeting first!");
-            return;
-        }
         if(JOptionPane.showConfirmDialog(rootPane, "Are you sure?", "", JOptionPane.YES_NO_OPTION) == 0){
             String title = this.meetingText.getText();
             Calendar cal = this.dateChooserCombo1.getSelectedDate();
@@ -694,17 +679,93 @@ public class GUIManagerClient extends javax.swing.JFrame {
                 JOptionPane.showMessageDialog(rootPane, "These fields are required");
                 return;
             }
-            DateFormat formatter = new SimpleDateFormat("HH:mm");
-            Time timeValue = null;
-            try {
-                timeValue = new java.sql.Time(formatter.parse(timeStart).getTime());
-            } catch (ParseException ex) {
-                System.out.println("Time not right!");
+            String time = "";
+            String[] timeSyntax = timeStart.split("\\:");
+            if(timeSyntax.length == 3){
+                String hour = timeSyntax[0];
+                String minute = timeSyntax[1];
+                String second = timeSyntax[2];
+                if(hour.matches("[0-9]+")) {
+                    if (Integer.parseInt(hour)> 23){
+                        JOptionPane.showMessageDialog(rootPane, "Wrong Time value");
+                        return;
+                    }
+                    if (hour.length()==1){
+                        hour = "0"+hour;
+                    }
+                }
+                else{
+                    JOptionPane.showMessageDialog(rootPane, "Wrong Time value");
+                    return;
+                }
+                if(minute.matches("[0-9]+")) {
+                    if (Integer.parseInt(minute)> 59){
+                        JOptionPane.showMessageDialog(rootPane, "Wrong Time value");
+                        return;
+                    }
+                    if (minute.length()==1){
+                        minute = "0"+minute;
+                    }
+                }
+                else{
+                    JOptionPane.showMessageDialog(rootPane, "Wrong Time value");
+                    return;
+                }
+                if(second.matches("[0-9]+")) {
+                    if (Integer.parseInt(second)> 59){
+                        JOptionPane.showMessageDialog(rootPane, "Wrong Time value");
+                        return;
+                    }
+                    if (second.length()==1){
+                        second = "0"+second;
+                    }
+                }
+                else{
+                    JOptionPane.showMessageDialog(rootPane, "Wrong Time value");
+                    return;
+                }
+                time = hour + ":" + minute+":" + second;
+            }
+            else if(timeSyntax.length == 2){
+                String hour = timeSyntax[0];
+                String minute = timeSyntax[1];
+                String second = "00";
+                if(hour.matches("[0-9]+")) {
+                    if (Integer.parseInt(hour)> 23){
+                        JOptionPane.showMessageDialog(rootPane, "Wrong Time value");
+                        return;
+                    }
+                    if (hour.length()==1){
+                        hour = "0"+hour;
+                    }
+                }
+                else{
+                    JOptionPane.showMessageDialog(rootPane, "Wrong Time value");
+                    return;
+                }
+                if(minute.matches("[0-9]+")) {
+                    if (Integer.parseInt(minute)> 59){
+                        JOptionPane.showMessageDialog(rootPane, "Wrong Time value");
+                        return;
+                    }
+                    if (minute.length()==1){
+                        minute = "0"+minute;
+                    }
+                }
+                else{
+                    JOptionPane.showMessageDialog(rootPane, "Wrong Time value");
+                    return;
+                }
+                time = hour + ":" + minute+":" + second;
+            }
+            else{
+                JOptionPane.showMessageDialog(rootPane, "Wrong Time value");
+                return;
             }
             Meeting meeting = new Meeting();
             meeting.setTitle(title);
             meeting.setDate(sqlDate);
-            meeting.setTimeStart(timeValue);
+            meeting.setTimeStart(time);
             meeting.setUserCreateId(GUIManagerClient.user.getId());
             MeetingController meetingController = new MeetingController();
             int i = meetingController.addMeeting(meeting);
@@ -716,6 +777,7 @@ public class GUIManagerClient extends javax.swing.JFrame {
                 } catch (RemoteException ex) {
                     Logger.getLogger("Khong update duoc table!");
                 }
+                this.jLabel5.setText("");
             this.meetingText.setText("");
             this.timeText.setText("HH:mm:ss");
             GUIManagerClient.jTable1.clearSelection();
@@ -770,6 +832,7 @@ public class GUIManagerClient extends javax.swing.JFrame {
                         } catch (RemoteException ex) {
                             Logger.getLogger("Khong update duoc table!");
                         }
+                        this.jLabel5.setText("");
                         this.meetingText.setText("");
                         this.timeText.setText("HH:mm:ss");
                         GUIManagerClient.jTable1.clearSelection();
@@ -814,6 +877,7 @@ public class GUIManagerClient extends javax.swing.JFrame {
     }//GEN-LAST:event_viewReportButtonActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        this.jLabel5.setText("");
         this.meetingText.setText("");
         this.timeText.setText("HH:mm:ss");
         GUIManagerClient.jTable1.clearSelection();
@@ -903,7 +967,7 @@ public class GUIManagerClient extends javax.swing.JFrame {
                 List<User> users = userController.getUsers();
                 try {
                     remoteManagerImpl.h.updateMeetingTable(list);
-                    remoteManagerImpl.h.updateReporterTable(meetingSelected.getId());
+                    //remoteManagerImpl.h.updateReporterTable(meetingSelected.getId());
                     remoteManagerImpl.h.updateReporterComboBox(meetingSelected.getId());
                     remoteManagerImpl.h.updateUserSharedComboBox(meetingSelected.getId());
                     remoteManagerImpl.h.staffUpdateMeetingTable(list);
@@ -1009,7 +1073,7 @@ public class GUIManagerClient extends javax.swing.JFrame {
     class RemoteManagerImpl extends UnicastRemoteObject implements RemoteManagerInterface{
         public RemoteInterface h;
         public RemoteManagerImpl() throws RemoteException, NotBoundException, MalformedURLException {
-            h = (RemoteInterface)Naming.lookup("remoteInterface");
+            h = Register.registry();
             h.addRemoteManagerInterface(this);
         }
         @Override
@@ -1036,7 +1100,11 @@ public class GUIManagerClient extends javax.swing.JFrame {
         public void updateReporterComboBox(int meetingId) throws RemoteException {
             SwingUtilities.invokeLater(new Runnable(){
                 public void run(){
+                    if (GUIManagerClient.this.meetingSelected == null){
+                        return;
+                    }
                     if (GUIManagerClient.this.meetingSelected.getId() == meetingId){
+                        System.out.println(GUIManagerClient.this.meetingSelected.getId());
                         GUIManagerClient.selectReporterComboBox.removeAllItems();
                         List<Integer> reporterIds = meetingController.getReporterIds(meetingId);
                         List<Integer> userIds = new ArrayList<>();
@@ -1062,6 +1130,9 @@ public class GUIManagerClient extends javax.swing.JFrame {
         public void updateReporterTable(int meetingId) throws RemoteException {
             SwingUtilities.invokeLater(new Runnable(){
                 public void run(){
+                    if (GUIManagerClient.this.meetingSelected == null){
+                        return;
+                    }
                     if (GUIManagerClient.this.meetingSelected.getId() == meetingId){
                         List<Integer> reporterIds = meetingController.getReporterIds(meetingId);
                         List<User> reporters = new ArrayList<>();
@@ -1080,6 +1151,9 @@ public class GUIManagerClient extends javax.swing.JFrame {
         public void updateUserNotSharedYet(int meetingId) throws RemoteException {
             SwingUtilities.invokeLater(new Runnable(){
                 public void run(){
+                    if (GUIManagerClient.this.meetingSelected == null){
+                        return;
+                    }
                     if (GUIManagerClient.this.meetingSelected.getId() == meetingId){
                         GUIManagerClient.userSharedComboBox.removeAllItems();
                         List<User> users = GUIManagerClient.this.getUserDontHavePermission(GUIManagerClient.this.meetingSelected);
@@ -1092,6 +1166,9 @@ public class GUIManagerClient extends javax.swing.JFrame {
         public void updatePermissionTable(List<User> list, Meeting meeting) throws RemoteException{
             SwingUtilities.invokeLater(new Runnable(){
                 public void run(){
+                    if (GUIManagerClient.this.meetingSelected == null){
+                        return;
+                    }
                     if (GUIManagerClient.this.meetingSelected.getId() == meeting.getId()){
                         GUIManagerClient.updateListPermission(list, meeting);
                     }

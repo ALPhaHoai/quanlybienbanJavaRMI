@@ -5,25 +5,25 @@
  */
 package quanlybienbanclientView;
 
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import entity.User;
 import helpfile.EncryptPassword;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.net.MalformedURLException;
-import java.rmi.Naming;
-import java.rmi.NotBoundException;
-import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
-import javax.swing.table.DefaultTableModel;
 import quanlybienbanclientController.UserController;
 import registry.Register;
 import remoteInterface.RemoteAdminInterface;
 import remoteInterface.RemoteInterface;
+
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.net.MalformedURLException;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
+import java.util.List;
+import java.util.TimerTask;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -31,6 +31,7 @@ import remoteInterface.RemoteInterface;
  */
 public class GUIAdminClient extends javax.swing.JFrame {
     private final UserController userController;
+    private String usernameOfUserSelected;
     private String passwdOfUserSelected;
     private RemoteAdminImpl remoteAdminImpl;
     public static User user;
@@ -47,6 +48,15 @@ public class GUIAdminClient extends javax.swing.JFrame {
             } catch (Exception ex) {
                 Logger.getLogger(GUIAdminClient.class.getName()).log(Level.SEVERE, null, ex);
             }
+    }
+    private boolean checkUsernameExist(String username){
+        List<User> users = userController.getUsers();
+        for (User u: users){
+            if (username.equals(u.getUsername())){
+                return true;
+            }
+        }
+        return false;
     }
     /**
      * Creates new form GUIClient
@@ -107,6 +117,7 @@ public class GUIAdminClient extends javax.swing.JFrame {
         jLabel8 = new javax.swing.JLabel();
         idTF = new javax.swing.JTextField();
         positionComboBox = new javax.swing.JComboBox<>();
+        jLabel9 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setResizable(false);
@@ -168,7 +179,7 @@ public class GUIAdminClient extends javax.swing.JFrame {
             }
         });
 
-        jLabel3.setText("You are logging in as Admin ");
+        jLabel3.setText("You are logging in as");
 
         jLabel4.setText("Username");
 
@@ -207,12 +218,13 @@ public class GUIAdminClient extends javax.swing.JFrame {
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addGap(0, 0, Short.MAX_VALUE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(jLabel1)
-                .addGap(264, 264, 264))
+                .addGap(260, 260, 260))
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel9, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(jLabel3)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -258,11 +270,13 @@ public class GUIAdminClient extends javax.swing.JFrame {
                     .addComponent(jLabel2)
                     .addComponent(jButton2)
                     .addComponent(jLabel3))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel1)
-                .addGap(24, 24, 24)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 172, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 172, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jLabel9, javax.swing.GroupLayout.PREFERRED_SIZE, 18, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(editButton)
                     .addComponent(deleteButton)
@@ -316,6 +330,10 @@ public class GUIAdminClient extends javax.swing.JFrame {
             return;
         }
         String encryptPasswd = EncryptPassword.getMD5(spassword);
+        if (this.checkUsernameExist(susername)){
+            JOptionPane.showMessageDialog(rootPane, "This username already exist!");
+            return;
+        }
         User tempuser = new User();
         tempuser.setUsername(susername);
         tempuser.setPassword(encryptPasswd);
@@ -354,13 +372,20 @@ public class GUIAdminClient extends javax.swing.JFrame {
                 encryptedPasswd = spassword;
             }
             else{ encryptedPasswd = EncryptPassword.getMD5(spassword); }
+            if (!susername.equals(this.usernameOfUserSelected)){
+                if (this.checkUsernameExist(susername)){
+                    JOptionPane.showMessageDialog(rootPane, "This username already exist!");
+                    return;
+                }
+            }
+            
             User tempuser = new User();
             tempuser.setId(Integer.parseInt(idTF.getText()));
             tempuser.setUsername(susername);
             tempuser.setPassword(encryptedPasswd);
             tempuser.setPosition(sposition);
             tempuser.setFullname(sfullname);
-
+            
             int i = userController.editUser(tempuser);
             if (i > 0){
                 JOptionPane.showMessageDialog(rootPane, "Success!");
@@ -443,6 +468,7 @@ public class GUIAdminClient extends javax.swing.JFrame {
         if(row!=-1){
             this.idTF.setText(GUIAdminClient.userTable.getValueAt(row, 0).toString());
             this.usernameTF.setText(GUIAdminClient.userTable.getValueAt(row, 1).toString());
+            this.usernameOfUserSelected = GUIAdminClient.userTable.getValueAt(row, 1).toString();
             this.passwordTF.setText(GUIAdminClient.userTable.getValueAt(row, 2).toString());
             this.passwdOfUserSelected = GUIAdminClient.userTable.getValueAt(row, 2).toString();
             this.fullnameTF.setText(GUIAdminClient.userTable.getValueAt(row, 3).toString());
@@ -465,7 +491,7 @@ public class GUIAdminClient extends javax.swing.JFrame {
     class RemoteAdminImpl extends UnicastRemoteObject implements RemoteAdminInterface{
         public RemoteInterface h;
         public RemoteAdminImpl() throws RemoteException, NotBoundException, MalformedURLException {
-            h = (RemoteInterface)Naming.lookup("remoteInterface");
+            h = Register.registry();
             h.addRemoteAdminInterface(this);
         }
         @Override
@@ -473,6 +499,14 @@ public class GUIAdminClient extends javax.swing.JFrame {
             SwingUtilities.invokeLater(new Runnable(){
                 public void run(){
                     GUIAdminClient.updateTable(list);
+                    GUIAdminClient.this.jLabel9.setText("Someone changed data! Loaded all changes!");
+                    java.util.Timer timer = new java.util.Timer();
+                    timer.schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+                            GUIAdminClient.this.jLabel9.setText("");
+                        }
+                    }, 3000);
                 }
             });
         }
@@ -530,6 +564,7 @@ public class GUIAdminClient extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
+    private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane2;
     javax.swing.JTextField passwordTF;

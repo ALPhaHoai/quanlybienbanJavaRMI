@@ -10,34 +10,25 @@ import entity.Report;
 import entity.ReportPart;
 import entity.User;
 import helpfile.CheckReportPart;
+import quanlybienbanclientController.*;
+import registry.Register;
+import remoteInterface.RemoteInterface;
+import remoteInterface.RemoteStaffInterface;
+import java.util.Timer;
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.net.MalformedURLException;
-import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.JFileChooser;
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
-import javax.swing.table.DefaultTableModel;
-import quanlybienbanclientController.MeetingController;
-import quanlybienbanclientController.PermissionController;
-import quanlybienbanclientController.ReportController;
-import quanlybienbanclientController.ReportPartController;
-import quanlybienbanclientController.UserController;
-import registry.Register;
-import remoteInterface.RemoteInterface;
-import remoteInterface.RemoteStaffInterface;
 
 /**
  *
@@ -69,12 +60,19 @@ public class GUIStaffClient extends javax.swing.JFrame {
     }
     
     public static void updateReportPartTable(List<ReportPart> list){
-        Object[] column = {"Id","File Uploaded"};
+        Object[] column = {"Id","File Uploaded", "File Type"};
         DefaultTableModel model = new DefaultTableModel();
         model.setColumnIdentifiers(column);
         try {
             for (ReportPart rp : list ){
-                Object[] row = { rp.getId(), rp.getFileName() };
+                String type = "PersonTime";
+                if(rp.getType()==1){
+                    type = "ContentTime";
+                }
+                else if(rp.getType()==2){
+                    type = "Transcript";
+                }
+                Object[] row = { rp.getId(), rp.getFileName() , type};
                 model.addRow(row);
             }
             GUIStaffClient.reportPartTable.setModel(model);
@@ -162,6 +160,9 @@ public class GUIStaffClient extends javax.swing.JFrame {
         filePreviewTextArea = new javax.swing.JTextArea();
         jLabel6 = new javax.swing.JLabel();
         jLabel7 = new javax.swing.JLabel();
+        jRadioButton3 = new javax.swing.JRadioButton();
+        jLabel8 = new javax.swing.JLabel();
+        jLabel9 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setResizable(false);
@@ -232,7 +233,7 @@ public class GUIStaffClient extends javax.swing.JFrame {
         });
 
         buttonGroup1.add(jRadioButton1);
-        jRadioButton1.setText("Person-Content");
+        jRadioButton1.setText("Person-[TimeBegin~TimeEnd]");
 
         buttonGroup1.add(jRadioButton2);
         jRadioButton2.setText("Content[TimeBegin~TimeEnd]");
@@ -249,7 +250,7 @@ public class GUIStaffClient extends javax.swing.JFrame {
             }
         });
 
-        viewReportButton.setText("View Report");
+        viewReportButton.setText("View Report Content");
         viewReportButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 viewReportButtonActionPerformed(evt);
@@ -261,7 +262,7 @@ public class GUIStaffClient extends javax.swing.JFrame {
         jTextArea1.setRows(5);
         jScrollPane2.setViewportView(jTextArea1);
 
-        generateReportButton.setText("Generate Report");
+        generateReportButton.setText("Generate Report Content");
         generateReportButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 generateReportButtonActionPerformed(evt);
@@ -273,11 +274,11 @@ public class GUIStaffClient extends javax.swing.JFrame {
 
             },
             new String [] {
-                "Id", "File Uploaded"
+                "Id", "File Uploaded", "File Type"
             }
         ) {
             boolean[] canEdit = new boolean [] {
-                false, false
+                false, false, false
             };
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
@@ -309,6 +310,9 @@ public class GUIStaffClient extends javax.swing.JFrame {
 
         jLabel7.setText("(only file .txt)");
 
+        buttonGroup1.add(jRadioButton3);
+        jRadioButton3.setText("Transcript");
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -324,66 +328,73 @@ public class GUIStaffClient extends javax.swing.JFrame {
                         .addComponent(logoutButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                .addComponent(jRadioButton1, javax.swing.GroupLayout.DEFAULT_SIZE, 295, Short.MAX_VALUE)
-                                .addComponent(jRadioButton2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                            .addComponent(uploadButton, javax.swing.GroupLayout.PREFERRED_SIZE, 342, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addGap(6, 6, 6)
-                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(generateReportButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                    .addComponent(viewReportButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(jLabel2)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(meetingTitleTF, javax.swing.GroupLayout.PREFERRED_SIZE, 248, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                            .addComponent(jRadioButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 346, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                                .addComponent(jRadioButton3, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(uploadButton, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 340, Short.MAX_VALUE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(meetingTitleTF, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 248, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(generateReportButton, javax.swing.GroupLayout.DEFAULT_SIZE, 351, Short.MAX_VALUE)
+                            .addComponent(viewReportButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addComponent(fileNameTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(chooseButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                            .addComponent(jScrollPane2)
-                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                            .addGroup(jPanel1Layout.createSequentialGroup()
                                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(jLabel6)
                                     .addGroup(jPanel1Layout.createSequentialGroup()
-                                        .addComponent(jLabel4)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(jLabel7)))
-                                .addGap(0, 0, Short.MAX_VALUE)))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(fileNameTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                        .addComponent(chooseButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                    .addComponent(jScrollPane2)
+                                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                                    .addGroup(jPanel1Layout.createSequentialGroup()
+                                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                            .addComponent(jLabel6)
+                                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                                .addComponent(jLabel4)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jLabel7)))
+                                        .addGap(0, 0, Short.MAX_VALUE)))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED))
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(jRadioButton1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addGap(6, 6, 6)))
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jScrollPane3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                             .addComponent(deleteUploadButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addGap(0, 0, Short.MAX_VALUE)
-                                .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 91, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(jLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                                 .addComponent(meetingIdTF, javax.swing.GroupLayout.PREFERRED_SIZE, 248, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(jScrollPane4)
                             .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addComponent(jLabel5)
-                                .addGap(0, 0, Short.MAX_VALUE))
-                            .addComponent(jScrollPane4))))
+                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 91, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(jLabel5))
+                                .addGap(0, 0, Short.MAX_VALUE))))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel8, javax.swing.GroupLayout.PREFERRED_SIZE, 338, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel9, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGap(19, 19, 19)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel1)
-                            .addComponent(nameLabel)
-                            .addComponent(logoutButton))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 164, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 164, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(16, 16, 16)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel1)
+                    .addComponent(nameLabel)
+                    .addComponent(logoutButton))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 134, Short.MAX_VALUE)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jLabel9, javax.swing.GroupLayout.DEFAULT_SIZE, 24, Short.MAX_VALUE)
+                    .addComponent(jLabel8, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel4)
                     .addComponent(jLabel5)
@@ -394,27 +405,28 @@ public class GUIStaffClient extends javax.swing.JFrame {
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(fileNameTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(chooseButton))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 8, Short.MAX_VALUE)
+                        .addGap(18, 18, 18)
                         .addComponent(jLabel6)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 10, Short.MAX_VALUE)
                         .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 162, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(jScrollPane4)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(deleteUploadButton)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel3)
-                            .addComponent(meetingIdTF, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                        .addComponent(deleteUploadButton)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel3)
+                    .addComponent(meetingIdTF, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jRadioButton1))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jRadioButton1)
                     .addComponent(meetingTitleTF, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel2))
+                    .addComponent(jLabel2)
+                    .addComponent(jRadioButton2))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jRadioButton2)
-                    .addComponent(generateReportButton))
+                    .addComponent(generateReportButton)
+                    .addComponent(jRadioButton3))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(uploadButton)
@@ -445,8 +457,10 @@ public class GUIStaffClient extends javax.swing.JFrame {
         this.filePreviewTextArea.setText("");
         List<ReportPart> listReportPartPC = reportPartController.getReportPartIds(0, Integer.parseInt(GUIStaffClient.meetingTable.getValueAt(row, 0).toString().substring(3)));
         List<ReportPart> listReportPartCT = reportPartController.getReportPartIds(1, Integer.parseInt(GUIStaffClient.meetingTable.getValueAt(row, 0).toString().substring(3)));
+        List<ReportPart> listReportPartTr = reportPartController.getReportPartIds(2, Integer.parseInt(GUIStaffClient.meetingTable.getValueAt(row, 0).toString().substring(3)));
         List<ReportPart> listAllReportPart = new ArrayList<>(listReportPartPC);
         listAllReportPart.addAll(listReportPartCT);
+        listAllReportPart.addAll(listReportPartTr);
         GUIStaffClient.updateReportPartTable(listAllReportPart);
     }//GEN-LAST:event_meetingTableMousePressed
 
@@ -483,7 +497,7 @@ public class GUIStaffClient extends javax.swing.JFrame {
     }//GEN-LAST:event_chooseButtonActionPerformed
 
     private void uploadButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_uploadButtonActionPerformed
-        final int PERSONCONTENT=0, CONTENTTIME=1;
+        final int PERSONCONTENT=0, CONTENTTIME=1, TRANSCRIPT=2;
         if (GUIStaffClient.meetingTable.getSelectedRow() == -1){
             JOptionPane.showMessageDialog(rootPane, "Please choose a meeting first!");
             return;
@@ -498,7 +512,11 @@ public class GUIStaffClient extends javax.swing.JFrame {
                 return;
             }
             if(JOptionPane.showConfirmDialog(rootPane, "Are you sure?","",JOptionPane.YES_NO_OPTION) == 0){
-                
+                try {
+                    remoteStaffImpl.h.updateStatus(meetingId, 1);
+                } catch (RemoteException ex) {
+                    Logger.getLogger(GUIStaffClient.class.getName()).log(Level.SEVERE, null, ex);
+                }
                 ReportPart reportPart = new ReportPart();
                 reportPart.setMeetingId(Integer.parseInt(this.meetingIdTF.getText().substring(3)));
                 if(this.jRadioButton1.isSelected()){
@@ -509,7 +527,7 @@ public class GUIStaffClient extends javax.swing.JFrame {
                         return;
                     }
                 }
-                else
+                else if(this.jRadioButton2.isSelected())
                 {
                     reportPart.setType(CONTENTTIME);
                     if(!CheckReportPart.checkReportPart(this.jTextArea1.getText(), CONTENTTIME)){
@@ -517,36 +535,104 @@ public class GUIStaffClient extends javax.swing.JFrame {
                         return;
                     }
                 }
-                reportPart.setFileName(selectedFile.getName());
-                reportPart.setContent(selectedFile);
-                int i = reportPartController.uploadFile(reportPart);
-                if( i > 0 ){
-                    JOptionPane.showMessageDialog(rootPane, "Success!");
-                    this.jTextArea1.setText("");
-                    this.fileNameTextField.setText("");
-                    this.buttonGroup1.clearSelection();
-                    List<ReportPart> listReportPartPC = reportPartController.getReportPartIds(0, Integer.parseInt(GUIStaffClient.meetingTable.getValueAt(row, 0).toString().substring(3)));
-                    List<ReportPart> listReportPartCT = reportPartController.getReportPartIds(1, Integer.parseInt(GUIStaffClient.meetingTable.getValueAt(row, 0).toString().substring(3)));
-                    List<ReportPart> listAllReportPart = new ArrayList<>(listReportPartPC);
-                    listAllReportPart.addAll(listReportPartCT);
-        //            GUIStaffClient.updateReportPartTable(listAllReportPart);
-                    try {
-                        remoteStaffImpl.h.staffUpdateReportPartTable(listAllReportPart, meetingId);
-                    } catch (RemoteException ex) {
-                        Logger.getLogger("Khong update duoc table!");
+                else{
+                    reportPart.setType(TRANSCRIPT);
+                    if(!CheckReportPart.checkReportPart(this.jTextArea1.getText(), TRANSCRIPT)){
+                        JOptionPane.showMessageDialog(rootPane, "Invalid transcipt Type");
+                        return;
                     }
                 }
-                else
-                    JOptionPane.showMessageDialog(rootPane, "Failed! Try again!");
+                reportPart.setFileName(selectedFile.getName());
+                reportPart.setContent(selectedFile);
+                List<ReportPart> trans = reportPartController.getReportPartIds(2, meetingSelected.getId());
+                if (reportPart.getType()!=2){
+                    int i = reportPartController.uploadFile(reportPart);
+                    if( i > 0 ){
+                        JOptionPane.showMessageDialog(rootPane, "Success!");
+                        this.jTextArea1.setText("");
+                        this.fileNameTextField.setText("");
+                        this.buttonGroup1.clearSelection();
+                        List<ReportPart> listReportPartPC = reportPartController.getReportPartIds(0, Integer.parseInt(GUIStaffClient.meetingTable.getValueAt(row, 0).toString().substring(3)));
+                        List<ReportPart> listReportPartCT = reportPartController.getReportPartIds(1, Integer.parseInt(GUIStaffClient.meetingTable.getValueAt(row, 0).toString().substring(3)));
+                        List<ReportPart> listReportPartTr = reportPartController.getReportPartIds(2, Integer.parseInt(GUIStaffClient.meetingTable.getValueAt(row, 0).toString().substring(3)));
+                        List<ReportPart> listAllReportPart = new ArrayList<>(listReportPartPC);
+                        listAllReportPart.addAll(listReportPartCT);
+                        listAllReportPart.addAll(listReportPartTr);
+            //            GUIStaffClient.updateReportPartTable(listAllReportPart);
+                        try {
+                            remoteStaffImpl.h.staffUpdateReportPartTable(listAllReportPart, meetingId, user.getUsername());
+                        } catch (RemoteException ex) {
+                            Logger.getLogger("Khong update duoc table!");
+                        }
+                    }
+                    else{
+                        JOptionPane.showMessageDialog(rootPane, "Failed! Try again!");
+                        try {
+                            remoteStaffImpl.h.updateStatus(meetingId, 0);
+                        } catch (RemoteException ex) {
+                            Logger.getLogger(GUIStaffClient.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+                }
+                else {
+                    if (!trans.isEmpty()){
+                        JOptionPane.showMessageDialog(rootPane, "Already have a transcript! Remove it first!");
+                        try {
+                                remoteStaffImpl.h.updateStatus(meetingId, 0);
+                            } catch (RemoteException ex) {
+                                Logger.getLogger(GUIStaffClient.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        return;
+                    }
+                    else {
+                        int i = reportPartController.uploadFile(reportPart);
+                        Report report = new Report();
+                        report.setMeetingId(meetingId);
+                        report.setReportContent(this.jTextArea1.getText());
+                        report.setReportName(meetingSelected.getTitle()+"Transcript");
+                        report.setAuthors(user.getUsername());
+                        int ii = reportController.addReport(report);
+                        if( i > 0 && ii > 0){
+                            JOptionPane.showMessageDialog(rootPane, "Success!");
+                            this.jTextArea1.setText("");
+                            this.fileNameTextField.setText("");
+                            this.buttonGroup1.clearSelection();
+                            List<ReportPart> listReportPartPC = reportPartController.getReportPartIds(0, Integer.parseInt(GUIStaffClient.meetingTable.getValueAt(row, 0).toString().substring(3)));
+                            List<ReportPart> listReportPartCT = reportPartController.getReportPartIds(1, Integer.parseInt(GUIStaffClient.meetingTable.getValueAt(row, 0).toString().substring(3)));
+                            List<ReportPart> listReportPartTr = reportPartController.getReportPartIds(2, Integer.parseInt(GUIStaffClient.meetingTable.getValueAt(row, 0).toString().substring(3)));
+                            List<ReportPart> listAllReportPart = new ArrayList<>(listReportPartPC);
+                            listAllReportPart.addAll(listReportPartCT);
+                            listAllReportPart.addAll(listReportPartTr);
+                //            GUIStaffClient.updateReportPartTable(listAllReportPart);
+                            try {
+                                remoteStaffImpl.h.staffUpdateReportPartTable(listAllReportPart, meetingId, user.getUsername());
+                                List<Report> list = reportController.getReports(meetingId);
+                                remoteStaffImpl.h.updateReportTable(list);
+                            } catch (RemoteException ex) {
+                                Logger.getLogger("Khong update duoc table!");
+                            }
+                        }
+                        else{
+                            JOptionPane.showMessageDialog(rootPane, "Failed! Try again!");
+                            try {
+                                remoteStaffImpl.h.updateStatus(meetingId, 0);
+                            } catch (RemoteException ex) {
+                                Logger.getLogger(GUIStaffClient.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        }
+                    }
+                }
             }
 
             List<ReportPart> listReportPartPC = reportPartController.getReportPartIds(0, Integer.parseInt(GUIStaffClient.meetingTable.getValueAt(row, 0).toString().substring(3)));
             List<ReportPart> listReportPartCT = reportPartController.getReportPartIds(1, Integer.parseInt(GUIStaffClient.meetingTable.getValueAt(row, 0).toString().substring(3)));
+            List<ReportPart> listReportPartTr = reportPartController.getReportPartIds(2, Integer.parseInt(GUIStaffClient.meetingTable.getValueAt(row, 0).toString().substring(3)));
             List<ReportPart> listAllReportPart = new ArrayList<>(listReportPartPC);
+            listAllReportPart.addAll(listReportPartTr);
             listAllReportPart.addAll(listReportPartCT);
 //            GUIStaffClient.updateReportPartTable(listAllReportPart);
             try {
-                remoteStaffImpl.h.staffUpdateReportPartTable(listAllReportPart, meetingId);
+                remoteStaffImpl.h.staffUpdateReportPartTable(listAllReportPart, meetingId, user.getUsername());
             } catch (RemoteException ex) {
                 Logger.getLogger("Khong update duoc table!");
             }
@@ -597,7 +683,7 @@ public class GUIStaffClient extends javax.swing.JFrame {
                 List<ReportPart> reportPartPersonContents = reportPartController.getReportPartIds(0, meetingController.getMeeting(Integer.parseInt(this.meetingIdTF.getText().substring(3))).getId());
                 List<ReportPart> reportPartContentTimes = reportPartController.getReportPartIds(1, meetingController.getMeeting(Integer.parseInt(this.meetingIdTF.getText().substring(3))).getId());
                 if(reportPartPersonContents.isEmpty()){
-                    JOptionPane.showMessageDialog(rootPane, "Haven't have PersonContent file yet! Upload file first!");
+                    JOptionPane.showMessageDialog(rootPane, "Haven't have PersonTime file yet! Upload file first!");
                     return;
                 }
                 if(reportPartContentTimes.isEmpty()){
@@ -635,10 +721,12 @@ public class GUIStaffClient extends javax.swing.JFrame {
                 reportPartController.deleteReportPart(Integer.parseInt(GUIStaffClient.reportPartTable.getValueAt(row, 0).toString()));
                 List<ReportPart> listReportPartPC = reportPartController.getReportPartIds(0, meetingId);
                 List<ReportPart> listReportPartCT = reportPartController.getReportPartIds(1, meetingId);
+                List<ReportPart> listTranscript = reportPartController.getReportPartIds(2, meetingId);
                 List<ReportPart> listAllReportPart = new ArrayList<>(listReportPartPC);
                 listAllReportPart.addAll(listReportPartCT);
+                listAllReportPart.addAll(listTranscript);
                 try {
-                    remoteStaffImpl.h.staffUpdateReportPartTable(listAllReportPart, meetingId);
+                    remoteStaffImpl.h.staffUpdateReportPartTable(listAllReportPart, meetingId, null);
                 } catch (RemoteException ex) {
                     Logger.getLogger("Khong update duoc table!");
                 }
@@ -671,9 +759,28 @@ public class GUIStaffClient extends javax.swing.JFrame {
     class RemoteStaffImpl extends UnicastRemoteObject implements RemoteStaffInterface{
         public RemoteInterface h;
         private String username;
+        private String fileName;
+        private String fileType;
         public RemoteStaffImpl() throws RemoteException, NotBoundException, MalformedURLException{
-            h = (RemoteInterface)Naming.lookup("remoteInterface");
+            h = Register.registry();
+            username = GUIStaffClient.user.getUsername();
             h.addRemoteStaffInterface(this);
+        }
+
+        public String getFileName() {
+            return fileName;
+        }
+
+        public String getFileType() {
+            return fileType;
+        }
+
+        public void setFileName(String fileName) {
+            this.fileName = fileName;
+        }
+
+        public void setFileType(String fileType) {
+            this.fileType = fileType;
         }
         public String getUsername() {
             return username;
@@ -695,21 +802,66 @@ public class GUIStaffClient extends javax.swing.JFrame {
                     GUIStaffClient.updateMeetingTable(listHavePermission);
                     GUIStaffClient.this.meetingIdTF.setText("");
                     GUIStaffClient.this.meetingTitleTF.setText("");
+                    GUIStaffClient.this.jLabel8.setText("Loaded new changes!");
+                            Timer timer = new Timer();
+                            timer.schedule(new TimerTask() {
+                                @Override
+                                public void run() {
+                                    GUIStaffClient.this.jLabel8.setText("");
+                                }
+                            }, 5000);
                 }
             });
         }
 
         @Override
-        public void updateReportPartTable(List<ReportPart> list, int meetingId) throws RemoteException {
+        public void updateReportPartTable(List<ReportPart> list, int meetingId, String userUpload) throws RemoteException {
             SwingUtilities.invokeLater(new Runnable(){
                 public void run(){
                     if(GUIStaffClient.this.meetingSelected.getId() == meetingId){
                         GUIStaffClient.updateReportPartTable(list);
                         GUIStaffClient.this.filePreviewTextArea.setText("");
+                        if (userUpload==null){
+                            GUIStaffClient.this.jLabel9.setText("Updated!");
+                            Timer timer = new Timer();
+                            timer.schedule(new TimerTask() {
+                                @Override
+                                public void run() {
+                                    GUIStaffClient.this.jLabel9.setText("");
+                                }
+                            }, 5000);
+                        }
+                        else{    
+                            GUIStaffClient.this.jLabel9.setText(userUpload+ " uploaded file!");
+                            Timer timer = new Timer();
+                            timer.schedule(new TimerTask() {
+                                @Override
+                                public void run() {
+                                    GUIStaffClient.this.jLabel9.setText("");
+                                }
+                            }, 5000);
+                        }
                     }
                 }
             });
         }
+
+        @Override
+        public void updateStatus(int meetingId, int stat) throws RemoteException {
+            SwingUtilities.invokeLater(new Runnable(){
+                public void run(){
+                    if(GUIStaffClient.this.meetingSelected.getId() == meetingId && GUIStaffClient.user.getUsername()!=username){
+                        if (stat == 1){    
+                            GUIStaffClient.this.jLabel9.setText("Someone is uploading file");
+                        }
+                        else{
+                            GUIStaffClient.this.jLabel9.setText("");
+                        }
+                    }
+                }
+            });
+        }
+        
     }
     /**
      * @param args the command line arguments
@@ -756,9 +908,12 @@ public class GUIStaffClient extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
+    private javax.swing.JLabel jLabel8;
+    private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JRadioButton jRadioButton1;
     private javax.swing.JRadioButton jRadioButton2;
+    private javax.swing.JRadioButton jRadioButton3;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
